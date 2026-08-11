@@ -1,6 +1,6 @@
 // PokéMath Quest (Hana · P3) — offline cache
 // Keep this in step with APP_VERSION in index.html: 'pokequest-hana-<version>'
-const CACHE = 'pokequest-hana-h7';
+const CACHE = 'pokequest-hana-h8';
 const ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
 const CORE = ['./', './index.html', './manifest.json', './hana-voice.json', './hana-avatar.png', './icon-192.png', './icon-512.png'];
 
@@ -33,11 +33,15 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const path = new URL(e.request.url).pathname;
+  // network-first for the page AND the voice pack, so updates (like adding
+  // Mum's clips) are picked up on the next online visit instead of being
+  // shadowed by the old cached copy
   const isPage = e.request.mode === 'navigate' ||
-    new URL(e.request.url).pathname.endsWith('index.html');
+    path.endsWith('index.html') || path.endsWith('hana-voice.json');
   e.respondWith((async () => {
     if (isPage){
-      // page: network-first so a repo update shows on the next online visit
+      // network-first so a repo update shows on the next online visit
       try{
         const r = await fetch(e.request);
         const c = await caches.open(CACHE);

@@ -5,6 +5,7 @@ in the grown-ups panel (☁️ → 🔎 Check build).
 
 | Build | Date | What changed |
 |-------|------------|--------------|
+| h8 | 2026-08-11 | Voice-pack updates no longer stuck behind the offline cache (fixes Mum not being heard after h7). Robot voice now configurable: All / Answers only (new default — questions aren't auto-read) / Off. |
 | h7 | 2026-08-11 | Voice pack now has Mum AND Dad (62 clips, re-cleaned: high-pass, silence-trimmed, loudness-matched). New "Who speaks" setting in the grown-ups panel: Both (random mix) / Dad / Mum. |
 | h6 | 2026-08-11 | Grown-ups (☁️) panel is now scrollable — it had grown taller than the screen and the top/bottom were cut off with no way to scroll. |
 | h5 | 2026-08-11 | Hana's avatar (from the Starwing artwork) cut out from its background and added to the home screen beside her Pokémon buddy; cached offline. |

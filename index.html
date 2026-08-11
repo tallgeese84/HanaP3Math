@@ -836,6 +836,13 @@
       <button id="vwDad">Dad</button>
       <button id="vwMum">Mum</button>
     </div>
+    <div class="caprow">
+      <span>Robot voice</span>
+      <button id="rvFull">All</button>
+      <button id="rvFacts">Answers only</button>
+      <button id="rvOff">Off</button>
+    </div>
+    <div style="font-size:12px;margin-top:2px">"All" also reads each question aloud. "Answers only" keeps the robot to answer confirmations — tapping a question still reads it out.</div>
     <div class="pprow" id="vpTests" style="flex-wrap:wrap"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
@@ -862,7 +869,7 @@
      2. add a line to CHANGELOG.md saying what changed
    The version shows under the title and in ☁️ → Check build.
    ============================================================ */
-const APP_VERSION = 'h7';
+const APP_VERSION = 'h8';
 /* ============================================================
    PokéMath Quest — Hana · Singapore MOE Primary 3 maths
    Numbers to 10 000 · Add & Subtract · Multiply & Divide
@@ -1008,6 +1015,14 @@ function speakNumber(n){ say(numToWords(n)); }
    retry (wrong answer) · hint · streak · sky (big celebrations) · bye.
    playVoice() resolves with the clip length in seconds (0 = nothing played),
    so callers can queue the spoken math fact right after Dad's line. */
+/* Robot (text-to-speech) usage:
+   'full'  — reads questions aloud AND confirms answers
+   'facts' — quiet during questions; only confirms answers (default)
+   'off'   — robot never speaks (Mum/Dad clips still play)
+   Tapping a question always reads it aloud, in every mode except off. */
+let ttsMode = 'facts';
+const ttsQuestions = () => ttsMode === 'full';
+const ttsAllowed = () => ttsMode !== 'off';
 let voicePack = null, voiceOn = true, voiceWho = 'both', voiceLastKey = {};
 const voiceBufs = {}, voiceCats = {};
 fetch('./hana-voice.json')
@@ -1079,6 +1094,7 @@ function playVoice(cat){
    so nothing here can overlap. */
 function voiceThen(cat, fallbackLine, thenLine){
   playVoice(cat).then(d => {
+    if (!ttsAllowed()) return;
     if (d){ if (thenLine) say(thenLine); }
     else { if (fallbackLine) say(fallbackLine); if (thenLine && thenLine !== fallbackLine) say(thenLine); }
   });
@@ -1122,6 +1138,8 @@ async function loadStars(){
   if (vp === 'off') voiceOn = false;
   const vw = await store.get('hq_vwho');
   if (vw === 'dad' || vw === 'mum') voiceWho = vw;
+  const tm = await store.get('hq_tts');
+  if (tm === 'full' || tm === 'facts' || tm === 'off') ttsMode = tm;
   try{
     const st = JSON.parse(await store.get('hq_streak') || '{}');
     streak = st.s || 0; bestStreak = st.b || 0;
@@ -1299,7 +1317,7 @@ function renderTeam(){
       pkBuddy = id; pkState(); renderTeam(); renderBuddyHome();
       sndTap();
       document.getElementById('teamSpeech').textContent = monName(id) + ' is your buddy now!';
-      say(monName(id) + ' is your buddy now!');
+      if (ttsAllowed()) say(monName(id) + ' is your buddy now!');
     });
     grid.appendChild(card);
   });
@@ -1476,7 +1494,7 @@ function sayWrong(){
       'Good try ' + n + '! Look again!',
       'Almost ' + n + '! You can do it!'
     ];
-    say(lines[Math.floor(Math.random() * lines.length)]);
+    if (ttsAllowed()) say(lines[Math.floor(Math.random() * lines.length)]);
   });
 }
 
@@ -2045,8 +2063,8 @@ function genTime(lv){
 const GENS = { num: genNum, addsub: genAddSub, muldiv: genMulDiv, frac: genFrac, money: genMoney, time: genTime };
 
 /* ---------- ask + answer plumbing ---------- */
-document.getElementById('qtext').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
-document.getElementById('eqline').addEventListener('click', () => { if (q.phrase) say(q.phrase, true); });
+document.getElementById('qtext').addEventListener('click', () => { if (q.phrase && ttsAllowed()) say(q.phrase, true); });
+document.getElementById('eqline').addEventListener('click', () => { if (q.phrase && ttsAllowed()) say(q.phrase, true); });
 
 function newQuestion(){
   if (!MODES.includes(mode)) return;
@@ -2069,7 +2087,7 @@ function newQuestion(){
   document.getElementById('quizSpeech').textContent = '';
   const old = document.getElementById('helpBox'); if (old) old.remove();
   buildAnswerUI();
-  say(q.phrase);
+  if (ttsQuestions()) say(q.phrase);
   const lookMs = P().look;
   const sp = document.getElementById('quizSpeech');
   if (lookMs > 0){
@@ -2230,7 +2248,7 @@ function resolveAnswer(correct, btn){
       const blank = document.getElementById('blank');
       if (blank) blank.innerHTML = at;
       sp.innerHTML = 'The answer is <b>' + at + '</b> — next one!';
-      playVoice('hint').then(() => say(q.fact));
+      playVoice('hint').then(() => { if (ttsAllowed()) say(q.fact); });
       setTimeout(function waitQuiet(){
         if (!speechIdle() && MODES.includes(mode)){ setTimeout(waitQuiet, 250); return; }
         if (MODES.includes(mode)) newQuestion();
@@ -2270,13 +2288,13 @@ function zapQuestion(){
   if (isDiv){
     zap.ans = n;
     document.getElementById('zapQ').textContent = (b * n) + ' ÷ ' + b + ' = ?';
-    say('What is ' + numToWords(b * n) + ' divided by ' + numToWords(b) + '?');
+    if (ttsQuestions()) say('What is ' + numToWords(b * n) + ' divided by ' + numToWords(b) + '?');
     zap.cands = [n];
     [n + 1, n - 1, n + 2].forEach(d => { if (d >= 1 && d <= 12 && !zap.cands.includes(d)) zap.cands.push(d); });
   } else {
     zap.ans = n * b;
     document.getElementById('zapQ').textContent = n + ' × ' + b + ' = ?';
-    say('What is ' + numToWords(n) + ' times ' + numToWords(b) + '?');
+    if (ttsQuestions()) say('What is ' + numToWords(n) + ' times ' + numToWords(b) + '?');
     const set = [zap.ans];
     [n * (b + 1), n * (b - 1), (n + 1) * b, (n - 1) * b, zap.ans + b].forEach(d => {
       if (d >= 1 && d <= 120 && !set.includes(d)) set.push(d);
@@ -2485,7 +2503,7 @@ function startTower(){
 function setTarget(){
   const nxt = race.seq[race.idx];
   document.getElementById('towerSpeech').textContent = 'Find ' + fmtNum(nxt) + '!';
-  say('Find ' + numToWords(nxt));
+  if (ttsQuestions()) say('Find ' + numToWords(nxt));
 }
 
 function roundLost(){
@@ -2494,7 +2512,7 @@ function roundLost(){
   sndOops();
   const again = 'Good effort! ' + monName(RIVAL_ID) + ' was quick that time — let’s race again!';
   document.getElementById('towerSpeech').textContent = again;
-  say(again);
+  if (ttsAllowed()) say(again);
   setTimeout(() => { if (mode === 'tower') startTower(); }, 2400);
 }
 
@@ -2676,7 +2694,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['hq_stars','hq_prog','hq_caught','hq_pbuddy','hq_ball','hq_sound','hq_name','hq_wv','hq_voice','hq_vwho','hq_caps','hq_flu'];
+  let taps = [], KEYS = ['hq_stars','hq_prog','hq_caught','hq_pbuddy','hq_ball','hq_sound','hq_name','hq_wv','hq_voice','hq_vwho','hq_tts','hq_caps','hq_flu'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -2710,7 +2728,16 @@ document.addEventListener('visibilitychange', () => {
     document.getElementById('vwBoth').classList.toggle('on', voiceWho === 'both');
     document.getElementById('vwDad').classList.toggle('on', voiceWho === 'dad');
     document.getElementById('vwMum').classList.toggle('on', voiceWho === 'mum');
+    document.getElementById('rvFull').classList.toggle('on', ttsMode === 'full');
+    document.getElementById('rvFacts').classList.toggle('on', ttsMode === 'facts');
+    document.getElementById('rvOff').classList.toggle('on', ttsMode === 'off');
   }
+  [['rvFull','full'], ['rvFacts','facts'], ['rvOff','off']].forEach(([id, m]) => {
+    document.getElementById(id).addEventListener('click', () => {
+      ttsMode = m; store.set('hq_tts', m); schedulePush(); renderVoice();
+      if (m !== 'off'){ audio(); say('This is the robot voice.'); }
+    });
+  });
   document.getElementById('vpOn').addEventListener('click', () => {
     voiceOn = true; store.set('hq_voice', 'on'); schedulePush(); renderVoice(); playVoice('hello');
   });
