@@ -215,9 +215,17 @@
   /* ---- Pokémon layer ---- */
   .pkspr{ width:42px; height:42px; object-fit:contain; vertical-align:middle; filter:drop-shadow(0 3px 2px rgba(20,22,60,.3)); }
   .obj .pkspr{ display:block; }
-  #buddyBox{ text-align:center; margin:2px 0 10px; }
+  #buddyBox{ text-align:center; margin:2px 0 10px;
+    display:flex; justify-content:center; align-items:flex-end; gap:10px; flex-wrap:wrap; }
+  #buddyBox .avcol, #buddyBox .bdcol{ text-align:center; }
   #buddyBox img{ width:132px; height:132px; object-fit:contain;
     filter:drop-shadow(0 6px 4px rgba(20,22,60,.4)); animation:floaty 4s ease-in-out infinite; }
+  #buddyBox img.hanaAv{
+    width:auto; height:130px;
+    animation:avbob 4.5s ease-in-out infinite;
+  }
+  @keyframes avbob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-7px) } }
+  #buddyBox .bdcol .waitpill{ margin-bottom:44px; }
   #buddyBox .bname{
     display:inline-block; background:linear-gradient(180deg,#FFFDF4,#F3E9CF);
     border:3px solid var(--ink); border-radius:999px; padding:3px 16px;
@@ -846,7 +854,7 @@
      2. add a line to CHANGELOG.md saying what changed
    The version shows under the title and in ☁️ → Check build.
    ============================================================ */
-const APP_VERSION = 'h3';
+const APP_VERSION = 'h5';
 /* ============================================================
    PokéMath Quest — Hana · Singapore MOE Primary 3 maths
    Numbers to 10 000 · Add & Subtract · Multiply & Divide
@@ -1233,13 +1241,17 @@ function renderBuddyHome(){
   const lc = caught.filter(isLegend).length;
   document.getElementById('teamTally').textContent =
     '(' + caught.length + '/' + DEX_TOTAL + (lc ? '  ✨' + lc : '') + ')';
+  const av = '<div class="avcol"><img class="hanaAv" src="hana-avatar.png" alt="" ' +
+    'onerror="this.parentElement.style.display=\'none\'">' +
+    '<div><span class="bname">' + (childName || 'Hana') + '</span></div></div>';
   if (!pkBuddy){
-    box.innerHTML = '<div class="bname">Win ' + (ballNeed() - ballStars) + ' more ⭐ to meet your first Pokémon!</div>';
+    box.innerHTML = av + '<div class="bdcol"><div class="bname waitpill">Win ' +
+      (ballNeed() - ballStars) + ' more ⭐ to meet your first Pokémon!</div></div>';
     return;
   }
-  box.innerHTML = '<img src="' + imgArt(pkBuddy) + '" alt="" ' +
+  box.innerHTML = av + '<div class="bdcol"><img src="' + imgArt(pkBuddy) + '" alt="" ' +
     'onerror="this.style.display=\'none\'">' +
-    '<div><span class="bname">' + monName(pkBuddy) + '</span></div>';
+    '<div><span class="bname">' + monName(pkBuddy) + '</span></div></div>';
 }
 let teamFilter = 'all';
 function renderTeam(){

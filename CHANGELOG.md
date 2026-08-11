@@ -5,6 +5,8 @@ in the grown-ups panel (☁️ → 🔎 Check build).
 
 | Build | Date | What changed |
 |-------|------------|--------------|
+| h5 | 2026-08-11 | Hana's avatar (from the Starwing artwork) cut out from its background and added to the home screen beside her Pokémon buddy; cached offline. |
+| h4 | 2026-08-11 | Hana's own app icon added (gold sparkle Pokéball, icon-192/512.png) so the two apps look different on the tablet. |
 | h3 | 2026-08-11 | Version number centralised (`APP_VERSION` in index.html + matching sw.js cache name); changelog added. |
 | h2 | 2026-08-11 | Fixed Dad's recorded voice overlapping the robot voice — the speech queue now waits for clips to finish, and clips silence the robot when they start. |
 | h1 | 2026-08-11 | First Primary 3 build for Hana, adapted from PokéMath Adventure: Numbers to 10 000, Add & Subtract, Multiply & Divide, Fractions, Money, Time & Measure, Wild Catch (× tables), Pattern Race (skip counting); Hana voice pack integrated; separate app identity, storage and sync slot. |
