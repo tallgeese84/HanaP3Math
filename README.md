@@ -13,7 +13,19 @@ progress, its own cloud-sync slot, and its own install icon.
 - Fractions — shading, equivalent, simplest form, comparing, adding/subtracting related fractions
 - Money — dollars & cents, adding/subtracting, making change (Singapore dollars)
 - Time & Measure — clock reading to the minute, duration, km/m/cm · kg/g · ℓ/mℓ conversions
+- Decimals — tenths to thousandths, compare, round, fraction↔decimal, + − × ÷ (P4)
+- Shapes & Angles — perimeter & area (incl. composite figures), angle types and degrees, symmetry, nets (P4)
+- Graphs & Data — tables, bar graphs and line graphs (P3–P4)
 - Wild Catch — quick-fire times tables · Pattern Race — skip counting vs Meowth
+
+Levels 1–3 cover Primary 3; Level 4 in every topic carries the full
+Primary 4 syllabus, so the app spans P3 through P4 end to end.
+
+**Handwritten answers.** Number questions show a writing pad: Hana writes
+the answer with the stylus and a small neural network (`digit-net.json`,
+trained on 150 000 handwritten digits including Singapore school-form
+shapes, running fully offline) reads her digits. The keypad is still there
+— toggle on the quiz screen or in the grown-ups panel.
 
 **Hana's voice pack.** `hana-voice.json` holds Dad's recorded clips.
 The app plays them at the matching moments: *hello* on opening, *first* for

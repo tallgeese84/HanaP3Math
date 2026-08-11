@@ -587,6 +587,16 @@
   .kpad button.kok{ background:linear-gradient(180deg,#79DDBD,#2FA97F); color:#fff; }
   .kpad button.kdel{ background:linear-gradient(180deg,#FFD5CE,#FF9184); }
   .kpad.locked button{ opacity:.45; }
+  #writePad{
+    display:block; width:100%; height:190px; background:#fff;
+    border:3px solid var(--ink); border-radius:18px; touch-action:none;
+    box-shadow:inset 0 2px 6px rgba(43,46,92,.12);
+  }
+  .wtools{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; width:100%; }
+  .wtools .btn{ font-size:17px; padding:8px 14px; }
+  .wtools .btn.wok{ background:linear-gradient(180deg,#79DDBD,#2FA97F); color:#fff; flex:1; max-width:180px; }
+  .entrybox.unsure{ border-color:var(--sun-d); color:#B8860B; }
+  .inswitch{ font-size:14px !important; padding:5px 10px !important; opacity:.85; }
   .entrybox{
     min-width:130px; text-align:center; font-size:32px; font-weight:bold;
     border:3px dashed var(--grape); border-radius:16px; padding:6px 14px; background:#fff;
@@ -708,6 +718,9 @@
       <button class="mode trace" data-go="frac"><span class="big"><img class="mico" data-mon="102" alt=""><span class="micoalt">🍰</span></span>Fractions</button>
       <button class="mode tower" data-go="money"><span class="big"><img class="mico" data-mon="52" alt=""><span class="micoalt">💰</span></span>Money</button>
       <button class="mode count" data-go="time" style="background:linear-gradient(180deg,#B7E39C,#5FB85E)"><span class="big"><img class="mico" data-mon="163" alt=""><span class="micoalt">⏰</span></span>Time &amp;<br>Measure</button>
+      <button class="mode add" data-go="dec" style="background:linear-gradient(180deg,#9FD8F2,#4A9FD8)"><span class="big"><img class="mico" data-mon="137" alt=""><span class="micoalt">🔟</span></span>Decimals</button>
+      <button class="mode trace" data-go="geo" style="background:linear-gradient(180deg,#C9B6F8,#8E6ADB)"><span class="big"><img class="mico" data-mon="120" alt=""><span class="micoalt">📐</span></span>Shapes &amp;<br>Angles</button>
+      <button class="mode sub" data-go="data" style="background:linear-gradient(180deg,#FFC98A,#E8913C)"><span class="big"><img class="mico" data-mon="201" alt=""><span class="micoalt">📊</span></span>Graphs &amp;<br>Data</button>
       <button class="mode zap" data-go="zap"><span class="big grasspeek"><img class="mico" data-mon="25" alt=""><span class="micoalt">🌿</span><span class="grassfront">🌿</span></span>Wild Catch<br>× tables</button>
       <button class="mode tower" data-go="tower" style="background:linear-gradient(180deg,#FFB6D4,#EE7BA8)"><span class="big"><img class="mico" data-mon="78" alt=""><span class="micoalt">🏁</span></span>Pattern<br>Race</button>
     </div>
@@ -740,6 +753,17 @@
       <div class="kwrap" id="kwrap" style="display:none">
         <div class="entrybox" id="entryBox"></div>
         <div class="kpad" id="kpad"></div>
+        <div class="wtools"><button class="btn inswitch" id="toWrite">✍️ Write instead</button></div>
+      </div>
+      <div class="kwrap" id="wwrap" style="display:none">
+        <div class="entrybox" id="wEntry"></div>
+        <canvas id="writePad"></canvas>
+        <div class="wtools">
+          <button class="btn" id="wUndo">↩️</button>
+          <button class="btn" id="wClear">🧽</button>
+          <button class="btn wok" id="wOk">✓ OK</button>
+          <button class="btn inswitch" id="toPad">⌨️</button>
+        </div>
       </div>
     </div>
   </div>
@@ -805,7 +829,7 @@
     <div class="speech" id="ppMsg" style="min-height:22px"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">🎚️ Difficulty level</div>
-    <div style="font-size:13px;margin-bottom:6px">Auto starts each topic at Level 1 and moves up only when answers are mostly quick and first-try. Set a fixed level to hold or stretch a topic.</div>
+    <div style="font-size:13px;margin-bottom:6px">Auto starts each topic at Level 1 and moves up only when answers are mostly quick and first-try. Level 4 bridges into early Primary 4 work (rounding, factors &amp; multiples, 2-digit × 2-digit, mixed numbers, 24-hour time). Set a fixed level to hold or stretch a topic.</div>
     <div id="capRows"></div>
     <div class="caprow" style="margin-top:10px">
       <span>Encourage by name</span>
@@ -843,6 +867,12 @@
       <button id="rvOff">Off</button>
     </div>
     <div style="font-size:12px;margin-top:2px">"All" also reads each question aloud. "Answers only" keeps the robot to answer confirmations — tapping a question still reads it out.</div>
+    <div class="caprow" style="margin-top:8px">
+      <span>Answer input</span>
+      <button id="inWrite">✍️ Write</button>
+      <button id="inPad">⌨️ Keypad</button>
+    </div>
+    <div style="font-size:12px;margin-top:2px">Write lets her handwrite number answers with the stylus; the app reads her digits. Keypad is the tap-to-type pad.</div>
     <div class="pprow" id="vpTests" style="flex-wrap:wrap"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
@@ -869,7 +899,7 @@
      2. add a line to CHANGELOG.md saying what changed
    The version shows under the title and in ☁️ → Check build.
    ============================================================ */
-const APP_VERSION = 'h8';
+const APP_VERSION = 'h11';
 /* ============================================================
    PokéMath Quest — Hana · Singapore MOE Primary 3 maths
    Numbers to 10 000 · Add & Subtract · Multiply & Divide
@@ -946,9 +976,10 @@ function fmtMoney(cents){
   return '$' + d + '.' + String(c).padStart(2, '0');
 }
 function fmtNum(n){
-  // Singapore convention: thin space between thousands
+  // Singapore convention: 4-digit numbers closed up (1396);
+  // 5-digit and up get a thin space (12\u2009345)
   const s = String(n);
-  return s.length > 4 ? s : s.replace(/^(\d)(\d{3})$/, '$1 $2');
+  return s.length >= 5 ? s.slice(0, s.length - 3) + '\u2009' + s.slice(-3) : s;
 }
 function timeWords(h24, m){
   const h = ((h24 + 11) % 12) + 1;
@@ -1140,9 +1171,13 @@ async function loadStars(){
   if (vw === 'dad' || vw === 'mum') voiceWho = vw;
   const tm = await store.get('hq_tts');
   if (tm === 'full' || tm === 'facts' || tm === 'off') ttsMode = tm;
+  const im = await store.get('hq_input');
+  if (im === 'pad' || im === 'write') inputMode = im;
   try{
     const st = JSON.parse(await store.get('hq_streak') || '{}');
     streak = st.s || 0; bestStreak = st.b || 0;
+    streakTarget = Math.min(STREAK_CAP, Math.max(12, st.t || 12));
+    streakHits = st.h || 0;
   }catch(e){}
   updateStreakPill();
   const c = await store.get('hq_caught');
@@ -1249,15 +1284,13 @@ function noteOffline(){
 function ballNeed(){
   return Math.min(30, 8 + Math.floor(caught.length / 12) * 2);
 }
-// Legendaries are NOT bought with stars — they are earned by a streak of
-// first-try correct answers, so careful thinking is the only route.
-// Each legendary demands a longer perfect run than the last: 12, 15, 18 ... up to 40.
-function streakNeed(){
-  // Each legendary asks for a longer perfect run, capped at 20 in a row.
-  const have = caught.filter(isLegend).length;
-  return Math.min(20, 12 + have * 2);
-}
+// Streak targets: start at 12; completing the SAME target 3 times raises
+// it by 3 (12 → 15 → 18 … capped at 30). Reaching the target always resets
+// the run — and claims a legendary when one is available.
+function streakNeed(){ return streakTarget; }
 let streak = 0, bestStreak = 0, legendPending = false;
+let streakTarget = 12, streakHits = 0;
+const STREAK_CAP = 30, STREAK_STEP = 3, STREAK_UPS = 3;
 let caught = [];       // ids in catch order
 let pkBuddy = 0;       // buddy id (0 = none yet)
 let ballStars = 0;
@@ -1304,8 +1337,8 @@ function renderTeam(){
     const none = document.createElement('div');
     none.style.gridColumn = '1 / -1';
     none.style.fontSize = '15px';
-    none.textContent = 'No legendary Pokémon yet — get ' + streakNeed() +
-      ' answers right in a row to unlock one!';
+    none.textContent = 'No legendary Pokémon yet — catch 20 Pokémon, then finish a ' +
+      streakNeed() + '-in-a-row streak to unlock one!';
     grid.appendChild(none);
   }
   list.forEach(id => {
@@ -1416,11 +1449,12 @@ const rnd = n => Math.floor(Math.random() * n);
    Fractions · Money · Time & Measure
    Answers by digit keypad or multiple choice.
    ============================================================ */
-const MODES = ['num','addsub','muldiv','frac','money','time'];
+const MODES = ['num','addsub','muldiv','frac','money','time','dec','geo','data'];
 const MODE_LABEL = { num:'Numbers', addsub:'Add & subtract', muldiv:'Multiply & divide',
-  frac:'Fractions', money:'Money', time:'Time & measure', zap:'Wild Catch', tower:'Pattern Race' };
+  frac:'Fractions', money:'Money', time:'Time & measure', dec:'Decimals', geo:'Shapes & angles',
+  data:'Graphs & data', zap:'Wild Catch', tower:'Pattern Race' };
 const q = { ans: 0, tries: 0, entry: '', kind: 'key', money: false };
-const progress = { num:0, addsub:0, muldiv:0, frac:0, money:0, time:0, zap:0, tower:0 };
+const progress = { num:0, addsub:0, muldiv:0, frac:0, money:0, time:0, dec:0, geo:0, data:0, zap:0, tower:0 };
 function saveProg(){
   store.set('hq_prog', JSON.stringify(progress));
   store.set('hq_caps', JSON.stringify(capOverride));
@@ -1507,32 +1541,45 @@ let pace = 'normal';
 const P = () => PACE[pace] || PACE.normal;
 
 const FLU_WIN = 10;
-const fluency = { num:[], addsub:[], muldiv:[], frac:[], money:[], time:[], zap:[] };
-const capOverride = { num:0, addsub:0, muldiv:0, frac:0, money:0, time:0, zap:0 };  // 0 = auto; else fixed level 1..3
-const FAST_MS = { num:15000, addsub:22000, muldiv:12000, frac:18000, money:26000, time:22000, zap:12000 };
+const fluency = { num:[], addsub:[], muldiv:[], frac:[], money:[], time:[], dec:[], geo:[], data:[], zap:[] };
+const capOverride = { num:0, addsub:0, muldiv:0, frac:0, money:0, time:0, dec:0, geo:0, data:0, zap:0 };  // 0 = auto; else fixed level 1..4
+const FAST_MS = { num:15000, addsub:22000, muldiv:12000, frac:18000, money:26000, time:22000, dec:20000, geo:24000, data:24000, zap:12000 };
 
 function bumpStreak(firstTry){
   if (firstTry){
     streak++;
     if (streak > bestStreak) bestStreak = streak;
-    if (streak >= streakNeed() && LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 20){
-      streak = 0;
-      legendPending = true;
-      showPraise('✨ LEGENDARY UNLOCKED! ✨');
-      voiceThen('streak', null, 'Amazing ' + (childName || '') + '! You unlocked a legendary Pokemon!');
+    if (streak >= streakTarget){
+      streak = 0;                                       // target reached always resets the run
+      streakHits++;
+      let raised = false;
+      if (streakHits >= STREAK_UPS && streakTarget < STREAK_CAP){
+        streakTarget = Math.min(STREAK_CAP, streakTarget + STREAK_STEP);
+        streakHits = 0;
+        raised = true;
+      }
       blip(523,0,.16); blip(659,.18,.16); blip(784,.36,.16); blip(1047,.54,.3);
-      setTimeout(function waitClear(){
-        if (!legendPending) return;
-        if (!speechIdle()){ setTimeout(waitClear, 250); return; }
-        clearSigns();
-        catchMon();
-      }, 1600);
+      if (LEGEND_IDS.some(i => !caught.includes(i)) && caught.length >= 20){
+        legendPending = true;
+        showPraise('✨ LEGENDARY UNLOCKED! ✨');
+        voiceThen('streak', null, 'Amazing ' + (childName || '') + '! You unlocked a legendary Pokemon!');
+        setTimeout(function waitClear(){
+          if (!legendPending) return;
+          if (!speechIdle()){ setTimeout(waitClear, 250); return; }
+          clearSigns();
+          catchMon();
+        }, 1600);
+      } else {
+        showPraise('🔥 STREAK COMPLETE!' + (raised ? '  Next target: ' + streakTarget : ''));
+        voiceThen('streak', null, 'Streak complete' + (raised ? '! The next target is ' + numToWords(streakTarget) : '') + '!');
+        addStar(3);                                     // streak bonus
+      }
     }
   } else {
     streak = 0;
   }
   updateStreakPill();
-  store.set('hq_streak', JSON.stringify({ s: streak, b: bestStreak }));
+  store.set('hq_streak', JSON.stringify({ s: streak, b: bestStreak, t: streakTarget, h: streakHits }));
 }
 function updateStreakPill(){
   const el = document.getElementById('streakCount');
@@ -1553,16 +1600,17 @@ function fluent(m){
   const good = f.filter(x => x.first && x.fast).length;
   return good >= 8;
 }
-/* Level 1 consolidates, 2 is the P3 core, 3 stretches.
+/* Level 1 consolidates, 2 is the P3 core, 3 stretches,
+   4 bridges into early Primary 4 work (MOE P4 syllabus).
    A topic moves up only when answers are mostly quick AND first-try;
    once fluent, one question in four peeks at the next level. */
 function level(m){
   const cap = capOverride[m] || 0;
   if (cap) return cap;
   const p = progress[m] || 0;
-  let lv = p < 12 ? 1 : p < 30 ? 2 : 3;
+  let lv = p < 12 ? 1 : p < 30 ? 2 : p < 60 ? 3 : 4;
   if (lv > 1 && !fluent(m)) lv--;
-  if (lv < 3 && fluent(m) && Math.random() < 0.25) lv++;
+  if (lv < 4 && fluent(m) && Math.random() < 0.25) lv++;
   return lv;
 }
 
@@ -1614,13 +1662,14 @@ function clockSVG(h24, m){
 /* ---------- question generators ----------
    Each returns { qtext, vis, eq, kind:'key'|'choice', ans, choices, money,
                   phrase, fact, help } */
-const PLACES = [['ones',1],['tens',10],['hundreds',100],['thousands',1000]];
+const PLACES = [['ones',1],['tens',10],['hundreds',100],['thousands',1000],['ten thousands',10000]];
 function randN(digits){
   const lo = Math.pow(10, digits - 1), hi = Math.pow(10, digits) - 1;
   return lo + rnd(hi - lo + 1);
 }
 
 function genNum(lv){
+  if (lv >= 4) return genNumP4();
   const digits = lv === 1 ? 3 : 4;
   const t = pick(lv === 1 ? ['value','digitAt','moreless','compare','pattern','oddeven']
                           : ['value','digitAt','moreless','compare','pattern','words','words']);
@@ -1714,6 +1763,7 @@ function genNum(lv){
 }
 
 function genAddSub(lv){
+  if (lv >= 4) return genAddSubP4();
   const add = Math.random() < 0.5;
   let a, b;
   if (lv === 1){ a = 10 + rnd(80); b = 10 + rnd(89 - Math.min(a, 89)) + 1; }
@@ -1747,6 +1797,7 @@ function genAddSub(lv){
 }
 
 function genMulDiv(lv){
+  if (lv >= 4) return genMulDivP4();
   if (lv <= 2){
     const tables = lv === 1 ? [2, 3, 4, 5, 10] : [6, 7, 8, 9];
     const b = pick(tables), n = 2 + rnd(9);
@@ -1812,6 +1863,7 @@ function fracChoices(correct, others){
 }
 function gcd(a, b){ return b ? gcd(b, a % b) : a; }
 function genFrac(lv){
+  if (lv >= 4) return genFracP4();
   if (lv === 1){
     if (Math.random() < 0.55){
       const d = pick([3, 4, 5, 6, 8, 10, 12]);
@@ -1914,6 +1966,7 @@ function genFrac(lv){
 }
 
 function genMoney(lv){
+  if (lv >= 4) return genMoneyP4();
   if (lv === 1){
     const t = pick(['tocents', 'todollars', 'coins']);
     if (t === 'tocents'){
@@ -1979,6 +2032,7 @@ function genMoney(lv){
 }
 
 function genTime(lv){
+  if (lv >= 4) return genTimeP4();
   const t = pick(lv === 1 ? ['read', 'read', 'convert'] :
                  lv === 2 ? ['read', 'dur', 'convert'] : ['dur', 'end', 'convert', 'convchoice']);
   if (t === 'read'){
@@ -2060,7 +2114,1003 @@ function genTime(lv){
     help: 'Every ' + fmtNum(mult) + ' ' + smallU + ' makes 1 ' + bigU + '.' };
 }
 
-const GENS = { num: genNum, addsub: genAddSub, muldiv: genMulDiv, frac: genFrac, money: genMoney, time: genTime };
+
+/* ---------- Level 4 · P3→P4 bridge generators (MOE P4 syllabus) ---------- */
+function genNumP4(){
+  const t = pick(['value','compare','pattern','round','round','factor','multiple']);
+  if (t === 'value'){
+    const n = 10000 + rnd(90000);
+    const ds = String(n).split('').map(Number);
+    let pi = rnd(5);
+    while (ds[ds.length - 1 - pi] === 0) pi = rnd(5);
+    const digit = ds[ds.length - 1 - pi], place = Math.pow(10, pi);
+    return { qtext: 'In ' + fmtNum(n) + ', what is the VALUE of the digit ' + digit + '?',
+      eq: 'value = <span class="blank" id="blank">?</span>', kind: 'key', ans: digit * place,
+      phrase: 'In ' + numToWords(n) + ', what is the value of the digit ' + numToWords(digit) + '?',
+      fact: 'The ' + numToWords(digit) + ' stands for ' + numToWords(digit * place) + '.',
+      help: 'The digit ' + digit + ' is in the ' + PLACES[pi][0] + ' place, so it is worth ' + digit + ' × ' + fmtNum(place) + '.' };
+  }
+  if (t === 'compare'){
+    const want = Math.random() < 0.5 ? 'greatest' : 'smallest';
+    const base = 10000 + rnd(89000);
+    const set = new Set([base]);
+    while (set.size < 4){
+      const v = base + pick([10, 100, 1000, 10000, 990, 1010]) * (1 + rnd(3)) * (Math.random() < 0.5 ? -1 : 1);
+      if (v >= 10000 && v <= 99999) set.add(v);
+    }
+    const arr = [...set];
+    const ans = want === 'greatest' ? Math.max(...arr) : Math.min(...arr);
+    return { qtext: 'Which number is the ' + want.toUpperCase() + '?',
+      kind: 'choice', ans, choices: arr.map(v => ({ t: fmtNum(v), v })),
+      phrase: 'Which number is the ' + want + '?',
+      fact: numToWords(ans) + ' is the ' + want + '.',
+      help: 'Compare the ten-thousands first, then work right one place at a time.' };
+  }
+  if (t === 'pattern'){
+    const step = pick([25, 50, 100, 1000]) * (Math.random() < 0.4 ? -1 : 1);
+    let start = 10000 + rnd(80000);
+    if (step > 0 && start + step * 3 > 99999) start = 99999 - step * 3 - rnd(500);
+    if (step < 0 && start + step * 3 < 1) start = 1 - step * 3 + rnd(500);
+    const seq = [0, 1, 2, 3].map(i => start + step * i);
+    const hole = 2 + rnd(2);
+    const ans = seq[hole];
+    return { qtext: 'Complete the number pattern!',
+      eq: seq.map((v, i) => i === hole ? '<span class="blank" id="blank">?</span>' : fmtNum(v)).join(', '),
+      kind: 'key', ans,
+      phrase: 'What number completes the pattern ' + seq.map((v, i) => i === hole ? 'blank' : numToWords(v)).join(', ') + '?',
+      fact: 'The missing number is ' + numToWords(ans) + '.',
+      help: 'The pattern ' + (step > 0 ? 'adds' : 'subtracts') + ' ' + fmtNum(Math.abs(step)) + ' each time.' };
+  }
+  if (t === 'round'){
+    const to = pick([10, 100, 1000]);
+    const n = 1005 + rnd(93000);
+    const ans = Math.round(n / to) * to;
+    return { qtext: 'Round ' + fmtNum(n) + ' to the nearest ' + fmtNum(to) + '.',
+      eq: fmtNum(n) + ' ≈ <span class="blank" id="blank">?</span>', kind: 'key', ans,
+      phrase: 'Round ' + numToWords(n) + ' to the nearest ' + numToWords(to) + '.',
+      fact: numToWords(n) + ' rounds to ' + numToWords(ans) + '.',
+      help: 'Look at the digit to the RIGHT of the ' + (to === 10 ? 'tens' : to === 100 ? 'hundreds' : 'thousands') + ' place: 5 or more rounds up, 4 or less keeps it.' };
+  }
+  if (t === 'factor'){
+    if (Math.random() < 0.4){
+      // common factor of two numbers (P4)
+      const g = pick([2, 3, 4, 6]);
+      const a = g * pick([2, 3, 4, 5]), b = g * pick([6, 7, 8, 9]);
+      const common = []; for (let i = 2; i <= Math.min(a, b); i++) if (a % i === 0 && b % i === 0) common.push(i);
+      const ans = pick(common);
+      const set = new Set([ans]);
+      while (set.size < 4){ const d = 2 + rnd(12); if (a % d !== 0 || b % d !== 0) set.add(d); }
+      return { qtext: 'Which is a COMMON factor of ' + a + ' and ' + b + '?',
+        kind: 'choice', ans, choices: [...set].map(v => ({ t: String(v), v })).sort(() => Math.random() - 0.5),
+        phrase: 'Which is a common factor of ' + numToWords(a) + ' and ' + numToWords(b) + '?',
+        fact: numToWords(ans) + ' divides both ' + a + ' and ' + b + ' exactly.',
+        help: 'A common factor divides BOTH numbers with nothing left over.' };
+    }
+    const n = pick([12, 18, 20, 24, 30, 36, 40, 48]);
+    const factors = []; for (let i = 2; i < n; i++) if (n % i === 0) factors.push(i);
+    const ans = pick(factors);
+    const set = new Set([ans]);
+    while (set.size < 4){ const d = 2 + rnd(n); if (n % d !== 0) set.add(d); }
+    return { qtext: 'Which number is a FACTOR of ' + n + '?',
+      kind: 'choice', ans, choices: [...set].map(v => ({ t: String(v), v })).sort(() => Math.random() - 0.5),
+      phrase: 'Which number is a factor of ' + numToWords(n) + '?',
+      fact: numToWords(ans) + ' is a factor of ' + numToWords(n) + ', because ' + ans + ' × ' + (n / ans) + ' = ' + n + '.',
+      help: 'A factor divides ' + n + ' exactly, with nothing left over.' };
+  }
+  if (Math.random() < 0.4){
+    // lowest common multiple of two small numbers (P4)
+    const a = pick([2, 3, 4, 5, 6]), b = pick([4, 6, 8, 9, 10]);
+    const g2 = (x, y) => y ? g2(y, x % y) : x;
+    const ans = a * b / g2(a, b);
+    return { qtext: 'What is the SMALLEST common multiple of ' + a + ' and ' + b + '?',
+      eq: 'answer = <span class="blank" id="blank">?</span>', kind: 'key', ans,
+      phrase: 'What is the smallest common multiple of ' + numToWords(a) + ' and ' + numToWords(b) + '?',
+      fact: numToWords(ans) + ' is the smallest number in both the ' + a + ' and ' + b + ' times tables.',
+      help: 'List multiples of ' + b + ' (' + b + ', ' + 2*b + ', ' + 3*b + '…) and find the first one that is also a multiple of ' + a + '.' };
+  }
+  const b = 3 + rnd(7);
+  const ans = b * (3 + rnd(10));
+  const set = new Set([ans]);
+  while (set.size < 4){ const d = ans + (1 + rnd(Math.max(4, b - 1))) * (Math.random() < 0.5 ? -1 : 1); if (d > 0 && d % b !== 0) set.add(d); }
+  return { qtext: 'Which number is a MULTIPLE of ' + b + '?',
+    kind: 'choice', ans, choices: [...set].map(v => ({ t: String(v), v })).sort(() => Math.random() - 0.5),
+    phrase: 'Which number is a multiple of ' + numToWords(b) + '?',
+    fact: numToWords(ans) + ' is ' + b + ' × ' + (ans / b) + '.',
+    help: 'Multiples of ' + b + ' are the ' + b + ' times table, going on forever.' };
+}
+function genAddSubP4(){
+  if (Math.random() < 0.3){
+    // two-step: a + b − c
+    const a = 1000 + rnd(30000), b = 500 + rnd(20000), c = 200 + rnd(Math.min(a + b - 1, 15000));
+    const ans = a + b - c;
+    if (a + b > 99999 || ans < 0) return genAddSubP4();
+    return { qtext: 'Work it out step by step!',
+      eq: fmtNum(a) + ' + ' + fmtNum(b) + ' − ' + fmtNum(c) + ' = <span class="blank" id="blank">?</span>',
+      kind: 'key', ans,
+      phrase: numToWords(a) + ' plus ' + numToWords(b) + ' minus ' + numToWords(c) + '?',
+      fact: 'The answer is ' + numToWords(ans) + '.',
+      help: 'Do it in two steps: add first, then subtract from the total.' };
+  }
+  const add = Math.random() < 0.5;
+  let a = 10000 + rnd(80000), b = 1000 + rnd(40000);
+  if (add && a + b > 99999) a = 99999 - b - rnd(2000);
+  if (!add && b > a){ const t = a; a = b; b = t; }
+  const ans = add ? a + b : a - b;
+  return { qtext: add ? 'Add them up!' : 'Find the difference!',
+    eq: fmtNum(a) + (add ? ' + ' : ' − ') + fmtNum(b) + ' = <span class="blank" id="blank">?</span>',
+    kind: 'key', ans,
+    phrase: 'What is ' + numToWords(a) + (add ? ' plus ' : ' minus ') + numToWords(b) + '?',
+    fact: numToWords(a) + (add ? ' plus ' : ' minus ') + numToWords(b) + ' equals ' + numToWords(ans) + '.',
+    help: add ? 'Line up the places and add from the ones, regrouping as you go.'
+              : 'Line up the places and subtract from the ones, regrouping when the top digit is smaller.' };
+}
+function genMulDivP4(){
+  const t = pick(['mul22', 'mul41', 'div41', 'rem']);
+  if (t === 'mul22'){
+    const a = Math.random() < 0.35 ? 100 + rnd(300) : 12 + rnd(78);   // sometimes 3-digit × 2-digit (P4)
+    const b = 12 + rnd(18);
+    const ans = a * b;
+    return { qtext: '<span class="big-eq">' + a + ' × ' + b + ' = ?</span>',
+      eq: a + ' × ' + b + ' = <span class="blank" id="blank">?</span>', kind: 'key', ans,
+      phrase: 'What is ' + numToWords(a) + ' times ' + numToWords(b) + '?',
+      fact: numToWords(a) + ' times ' + numToWords(b) + ' equals ' + numToWords(ans) + '.',
+      help: 'Split it: ' + a + ' × ' + b + ' = ' + a + ' × ' + (Math.floor(b / 10) * 10) + ' + ' + a + ' × ' + (b % 10) + '.' };
+  }
+  if (t === 'mul41'){
+    const a = 1000 + rnd(1500), b = 2 + rnd(4);
+    const ans = a * b;
+    return { qtext: '<span class="big-eq">' + fmtNum(a) + ' × ' + b + ' = ?</span>',
+      eq: fmtNum(a) + ' × ' + b + ' = <span class="blank" id="blank">?</span>', kind: 'key', ans,
+      phrase: 'What is ' + numToWords(a) + ' times ' + numToWords(b) + '?',
+      fact: numToWords(a) + ' times ' + numToWords(b) + ' equals ' + numToWords(ans) + '.',
+      help: 'Multiply each place by ' + b + ', starting from the ones, and carry as you go.' };
+  }
+  if (t === 'div41'){
+    const b = 2 + rnd(8), n = 100 + rnd(1100);
+    const a = b * n;
+    return { qtext: '<span class="big-eq">' + fmtNum(a) + ' ÷ ' + b + ' = ?</span>',
+      eq: fmtNum(a) + ' ÷ ' + b + ' = <span class="blank" id="blank">?</span>', kind: 'key', ans: n,
+      phrase: 'What is ' + numToWords(a) + ' divided by ' + numToWords(b) + '?',
+      fact: numToWords(a) + ' divided by ' + numToWords(b) + ' equals ' + numToWords(n) + '.',
+      help: 'Divide the biggest place first and bring the remainder down to the next place.' };
+  }
+  const b = 3 + rnd(7);
+  const quo = 20 + rnd(120);
+  const r = 1 + rnd(b - 1);
+  const a = b * quo + r;
+  const mk = (Q, R) => Q + ' R ' + R;
+  const set = new Set([mk(quo, r)]);
+  [[quo, (r + 1) % b || 1], [quo - 1, r], [quo + 1, r > 1 ? r - 1 : r + 1], [quo, b - r]].forEach(([Q, R]) => {
+    if (set.size < 4 && Q > 0 && R > 0 && R < b) set.add(mk(Q, R));
+  });
+  return { qtext: '<span class="big-eq">' + fmtNum(a) + ' ÷ ' + b + ' = ?</span><div style="font-size:15px">(quotient R remainder)</div>',
+    kind: 'choice', ans: mk(quo, r), choices: [...set].map(s => ({ t: s, v: s })),
+    phrase: 'What is ' + numToWords(a) + ' divided by ' + numToWords(b) + '? Give the remainder too.',
+    fact: numToWords(a) + ' divided by ' + numToWords(b) + ' is ' + numToWords(quo) + ' remainder ' + numToWords(r) + '.',
+    help: b + ' × ' + quo + ' = ' + b * quo + ' fits inside ' + a + '; the ' + r + ' left over is the remainder.' };
+}
+function genFracP4(){
+  const t = pick(['mixed', 'improper', 'ofset', 'ofset']);
+  const mixedT = (w, n, d) => '<b>' + w + '</b>' + frx(n, d);
+  if (t === 'mixed'){
+    const d = pick([3, 4, 5, 6, 8]), w = 1 + rnd(3), n = 1 + rnd(d - 1);
+    const imp = w * d + n;
+    const ans = w + ' ' + n + '/' + d;
+    const set = [[w, n, d], [w + 1, n, d], [w, Math.min(n + 1, d - 1), d], [Math.max(1, w - 1), n, d]];
+    const seen = new Set(), choices = [];
+    set.forEach(([W, N, D]) => {
+      const v = W + ' ' + N + '/' + D;
+      if (!seen.has(v)){ seen.add(v); choices.push({ t: mixedT(W, N, D), v }); }
+    });
+    return { qtext: 'Write ' + frx(imp, d) + ' as a MIXED NUMBER.',
+      kind: 'choice', ans, choices: choices.sort(() => Math.random() - 0.5),
+      phrase: 'Write ' + fracWords(imp, d) + ' as a mixed number.',
+      fact: fracWords(imp, d) + ' is ' + numToWords(w) + ' and ' + fracWords(n, d) + '.',
+      help: 'How many whole lots of ' + d + '/' + d + ' fit in ' + imp + '/' + d + '? The rest stays as a fraction.' };
+  }
+  if (t === 'improper'){
+    const d = pick([3, 4, 5, 6, 8]), w = 1 + rnd(3), n = 1 + rnd(d - 1);
+    const imp = w * d + n;
+    const ans = imp + '/' + d;
+    return { qtext: 'Write ' + mixedT(w, n, d) + ' as an IMPROPER fraction.',
+      kind: 'choice', ans,
+      choices: [[imp, d], [imp + 1, d], [w * d - n, d], [w + n, d]]
+        .filter((f, i, arr) => arr.findIndex(g => g[0] === f[0]) === i)
+        .map(f => ({ t: frx(f[0], f[1]), v: f[0] + '/' + f[1] })).sort(() => Math.random() - 0.5),
+      phrase: numToWords(w) + ' and ' + fracWords(n, d) + ' as an improper fraction?',
+      fact: 'That is ' + fracWords(imp, d) + '.',
+      help: 'Multiply the whole number by ' + d + ', then add the ' + n + ' on top: ' + w + ' × ' + d + ' + ' + n + ' = ' + imp + '.' };
+  }
+  const d = pick([3, 4, 5, 6, 8]), n = 1 + rnd(d - 1), k = 2 + rnd(7);
+  const M = d * k, ans = n * k;
+  return { qtext: 'What is ' + frx(n, d) + ' of ' + M + '?',
+    eq: frx(n, d) + ' of ' + M + ' = <span class="blank" id="blank">?</span>', kind: 'key', ans,
+    phrase: 'What is ' + fracWords(n, d) + ' of ' + numToWords(M) + '?',
+    fact: fracWords(n, d) + ' of ' + numToWords(M) + ' is ' + numToWords(ans) + '.',
+    help: 'Divide ' + M + ' into ' + d + ' equal groups (' + k + ' each), then take ' + n + ' groups.' };
+}
+function genMoneyP4(){
+  const ITEMS = ['notebooks', 'erasers', 'keychains', 'hairbands', 'stickers', 'kaya buns'];
+  if (Math.random() < 0.5){
+    const each = 5 * (25 + rnd(150));                   // $1.25 … $8.75
+    const qty = 2 + rnd(3);
+    const ans = each * qty;
+    const item = pick(ITEMS);
+    return { qtext: childName + ' buys ' + qty + ' ' + item + ' at ' + fmtMoney(each) + ' each. How much does she pay?',
+      eq: 'total = <span class="blank" id="blank">?</span>', kind: 'key', ans, money: true,
+      phrase: childName + ' buys ' + numToWords(qty) + ' ' + item + ' at ' + moneyWords(each) + ' each. How much altogether?',
+      fact: numToWords(qty) + ' times ' + moneyWords(each) + ' is ' + moneyWords(ans) + '.',
+      help: 'Multiply the dollars and the cents by ' + qty + ' — or add ' + fmtMoney(each) + ' ' + qty + ' times.' };
+  }
+  const note = pick([2000, 5000]);
+  const a = 5 * (60 + rnd(200)), b = 5 * (40 + rnd(160));
+  if (a + b >= note - 25) return genMoneyP4();
+  const ans = note - a - b;
+  return { qtext: childName + ' pays with ' + fmtMoney(note) + ' for two things costing ' + fmtMoney(a) + ' and ' + fmtMoney(b) + '. How much CHANGE does she get?',
+    eq: 'change = <span class="blank" id="blank">?</span>', kind: 'key', ans, money: true,
+    phrase: childName + ' pays with ' + moneyWords(note) + ' for things costing ' + moneyWords(a) + ' and ' + moneyWords(b) + '. How much change?',
+    fact: 'The change is ' + moneyWords(ans) + '.',
+    help: 'Two steps: add the two prices first, then subtract the total from ' + fmtMoney(note) + '.' };
+}
+function genTimeP4(){
+  const t = pick(['to24', 'from24', 'mins', 'dur2']);
+  const pad24 = (h, m) => String(h).padStart(2, '0') + String(m).padStart(2, '0');
+  if (t === 'to24'){
+    const h24 = 13 + rnd(10), m = 5 * rnd(12);
+    const ans = pad24(h24, m);
+    const set = new Set([ans]);
+    [pad24(h24 - 12, m), pad24((h24 + 1) % 24, m), pad24(h24, (m + 30) % 60)].forEach(v => { if (set.size < 4) set.add(v); });
+    return { qtext: 'Write ' + fmtTime(h24, m) + ' in 24-hour time.',
+      kind: 'choice', ans, choices: [...set].map(v => ({ t: v, v })).sort(() => Math.random() - 0.5),
+      phrase: 'Write ' + timeWords(h24, m) + ' in twenty four hour time.',
+      fact: fmtTime(h24, m) + ' is ' + ans + ' in 24-hour time.',
+      help: 'For pm times, add 12 to the hour: ' + (h24 - 12) + ' + 12 = ' + h24 + '.' };
+  }
+  if (t === 'from24'){
+    const h24 = 6 + rnd(17), m = 5 * rnd(12);
+    const ans = h24 * 60 + m;
+    const set = new Set([ans]);
+    [((h24 + 12) % 24) * 60 + m, ans + 60, ans - 60].forEach(v => { if (v >= 0 && v < 1440 && set.size < 4) set.add(v); });
+    return { qtext: 'The bus leaves at <b>' + pad24(h24, m) + '</b>. What time is that?',
+      kind: 'choice', ans,
+      choices: [...set].map(v => ({ t: fmtTime(Math.floor(v / 60), v % 60), v })).sort(() => Math.random() - 0.5),
+      phrase: 'The bus leaves at ' + pad24(h24, m) + '. What time is that?',
+      fact: pad24(h24, m) + ' is ' + timeWords(h24, m) + '.',
+      help: 'Hours of 13 or more are pm — subtract 12 to get the clock hour.' };
+  }
+  if (t === 'mins'){
+    const h = 1 + rnd(3), m = 5 * (1 + rnd(11));
+    const ans = h * 60 + m;
+    return { qtext: 'Convert: ' + h + ' h ' + m + ' min = ? min',
+      eq: h + ' h ' + m + ' min = <span class="blank" id="blank">?</span> min', kind: 'key', ans,
+      phrase: numToWords(h) + (h === 1 ? ' hour' : ' hours') + ' and ' + numToWords(m) + ' minutes — how many minutes altogether?',
+      fact: 'That is ' + numToWords(ans) + ' minutes.',
+      help: '1 hour = 60 minutes. Multiply the hours by 60, then add the minutes.' };
+  }
+  // duration crossing noon
+  const h1 = 10 + rnd(2), m1 = 5 * rnd(12);
+  const durM = 60 + 5 * rnd(30);
+  const total2 = h1 * 60 + m1 + durM;
+  const fmtDur = v => Math.floor(v / 60) + ' h' + (v % 60 ? ' ' + (v % 60) + ' min' : '');
+  const set = new Set([durM]);
+  [durM + 30, durM - 30, durM + 60].forEach(v => { if (v > 0 && set.size < 4) set.add(v); });
+  return { qtext: 'A trip starts at ' + fmtTime(h1, m1) + ' and ends at ' + fmtTime(Math.floor(total2 / 60), total2 % 60) + '. How long is it?',
+    kind: 'choice', ans: durM, choices: [...set].map(v => ({ t: fmtDur(v), v })).sort(() => Math.random() - 0.5),
+    phrase: 'A trip starts at ' + timeWords(h1, m1) + ' and ends at ' + timeWords(Math.floor(total2 / 60), total2 % 60) + '. How long is it?',
+    fact: 'It takes ' + numToWords(Math.floor(durM / 60)) + (durM < 120 ? ' hour' : ' hours') + (durM % 60 ? ' and ' + numToWords(durM % 60) + ' minutes' : '') + '.',
+    help: 'Count up to 12 noon first, then keep counting past it.' };
+}
+
+
+/* ============================================================
+   DECIMALS · SHAPES & ANGLES · GRAPHS & DATA  (P4)
+   ============================================================ */
+function decWords(x){
+  const s = String(x);
+  const [i, f] = s.split('.');
+  if (!f) return numToWords(+i);
+  return numToWords(+i) + ' point ' + f.split('').map(d => ONES[+d]).join(' ');
+}
+const DEC_PLACES = ['tenths','hundredths','thousandths'];
+function genDec(lv){
+  if (lv === 1){
+    const t = pick(['pvDigit','fracToDec','compare']);
+    if (t === 'pvDigit'){
+      const w = 1 + rnd(9), d1 = 1 + rnd(9), d2 = 1 + rnd(9);
+      const x = w + '.' + d1 + d2;
+      const pi = rnd(2);
+      const ans = pi === 0 ? d1 : d2;
+      return { qtext: 'In <b>' + x + '</b>, which digit is in the ' + DEC_PLACES[pi] + ' place?',
+        eq: 'digit = <span class="blank" id="blank">?</span>', kind: 'key', ans,
+        phrase: 'In ' + decWords(x) + ', which digit is in the ' + DEC_PLACES[pi] + ' place?',
+        fact: 'The ' + DEC_PLACES[pi] + ' digit is ' + numToWords(ans) + '.',
+        help: 'Right of the point: tenths first, then hundredths, then thousandths.' };
+    }
+    if (t === 'fracToDec'){
+      const den = pick([10, 100]);
+      const n = den === 10 ? 1 + rnd(9) : 1 + rnd(99);
+      const ans = +(n / den).toFixed(2);
+      return { qtext: 'Write ' + frx(n, den) + ' as a decimal.',
+        eq: frx(n, den) + ' = <span class="blank" id="blank">?</span>', kind: 'key', ans, dec: true,
+        phrase: 'Write ' + fracWords(n, den) + ' as a decimal.',
+        fact: fracWords(n, den) + ' is ' + decWords(ans) + '.',
+        help: den === 10 ? 'Tenths go one place after the point: 3/10 = 0.3.'
+                         : 'Hundredths fill two places after the point: 7/100 = 0.07.' };
+    }
+    const a = +((1 + rnd(9)) / 10).toFixed(1);
+    let b = +((5 + rnd(90)) / 100).toFixed(2);
+    if (a === b) b = +(b + 0.01).toFixed(2);
+    const ans = Math.max(a, b);
+    return { qtext: 'Which is GREATER?',
+      kind: 'choice', ans,
+      choices: [{ t: String(a), v: a }, { t: String(b), v: b }].sort(() => Math.random() - 0.5),
+      phrase: 'Which is greater: ' + decWords(a) + ' or ' + decWords(b) + '?',
+      fact: decWords(ans) + ' is greater.',
+      help: 'Line up the decimal points and compare tenths first — 0.8 is 0.80!' };
+  }
+  if (lv === 2){
+    const t = pick(['order','roundWhole','add1','bench']);
+    if (t === 'order'){
+      const want = Math.random() < 0.5 ? 'greatest' : 'smallest';
+      const set = new Set();
+      while (set.size < 4) set.add(+(Math.round((0.2 + Math.random() * 8) * 100) / 100).toFixed(2));
+      const arr = [...set].map(Number);
+      const ans = want === 'greatest' ? Math.max(...arr) : Math.min(...arr);
+      return { qtext: 'Which is the ' + want.toUpperCase() + '?',
+        kind: 'choice', ans, choices: arr.map(v => ({ t: String(v), v })),
+        phrase: 'Which is the ' + want + '?',
+        fact: decWords(ans) + ' is the ' + want + '.',
+        help: 'Compare whole numbers first, then tenths, then hundredths.' };
+    }
+    if (t === 'roundWhole'){
+      const x = +((1 + rnd(8)) + (1 + rnd(89)) / 100 + 0.005 * rnd(2)).toFixed(2);
+      const ans = Math.round(x);
+      return { qtext: 'Round <b>' + x + '</b> to the nearest whole number.',
+        eq: x + ' ≈ <span class="blank" id="blank">?</span>', kind: 'key', ans,
+        phrase: 'Round ' + decWords(x) + ' to the nearest whole number.',
+        fact: decWords(x) + ' rounds to ' + numToWords(ans) + '.',
+        help: 'Look at the tenths digit: 5 or more rounds up.' };
+    }
+    if (t === 'add1'){
+      const a = +((1 + rnd(80)) / 10).toFixed(1), b = +((1 + rnd(80)) / 10).toFixed(1);
+      const addQ = Math.random() < 0.6;
+      const [x, y] = addQ || a >= b ? [a, b] : [b, a];
+      const ans = +((addQ ? x + y : x - y)).toFixed(1);
+      return { qtext: addQ ? 'Add the decimals!' : 'Find the difference!',
+        eq: x + (addQ ? ' + ' : ' − ') + y + ' = <span class="blank" id="blank">?</span>',
+        kind: 'key', ans, dec: true,
+        phrase: 'What is ' + decWords(x) + (addQ ? ' plus ' : ' minus ') + decWords(y) + '?',
+        fact: 'The answer is ' + decWords(ans) + '.',
+        help: 'Line up the decimal points, then add or subtract like whole numbers.' };
+    }
+    const pairs = [[1,2,0.5],[1,4,0.25],[3,4,0.75],[1,5,0.2],[2,5,0.4],[3,5,0.6],[4,5,0.8],[1,10,0.1],[7,10,0.7]];
+    const [n, d, v] = pick(pairs);
+    if (Math.random() < 0.5){
+      const wrongs = pairs.filter(p => p[2] !== v).slice(0, 8);
+      const opts = new Set([v]);
+      while (opts.size < 4) opts.add(pick(wrongs)[2]);
+      return { qtext: 'Which decimal equals ' + frx(n, d) + '?',
+        kind: 'choice', ans: v, choices: [...opts].map(x => ({ t: String(x), v: x })).sort(() => Math.random() - 0.5),
+        phrase: 'Which decimal equals ' + fracWords(n, d) + '?',
+        fact: fracWords(n, d) + ' is ' + decWords(v) + '.',
+        help: 'Make the bottom 10 or 100: ' + n + '/' + d + ' = ' + (v * 100) + '/100.' };
+    }
+    const opts = new Set([n + '/' + d]);
+    pairs.filter(p => p[2] !== v).forEach(p => { if (opts.size < 4) opts.add(p[0] + '/' + p[1]); });
+    return { qtext: 'Which fraction equals <b>' + v + '</b>?',
+      kind: 'choice', ans: n + '/' + d,
+      choices: [...opts].map(s => { const [N, D] = s.split('/'); return { t: frx(N, D), v: s }; }).sort(() => Math.random() - 0.5),
+      phrase: 'Which fraction equals ' + decWords(v) + '?',
+      fact: decWords(v) + ' is ' + fracWords(n, d) + '.',
+      help: 'Write it over 10 or 100 first, then simplify.' };
+  }
+  if (lv === 3){
+    const t = pick(['add2','mult','pvValue']);
+    if (t === 'add2'){
+      const a = +((10 + rnd(890)) / 100).toFixed(2), b = +((10 + rnd(890)) / 100).toFixed(2);
+      const addQ = Math.random() < 0.6;
+      const [x, y] = addQ || a >= b ? [a, b] : [b, a];
+      const ans = +((addQ ? x + y : x - y)).toFixed(2);
+      return { qtext: addQ ? 'Add the decimals!' : 'Find the difference!',
+        eq: x + (addQ ? ' + ' : ' − ') + y + ' = <span class="blank" id="blank">?</span>',
+        kind: 'key', ans, dec: true,
+        phrase: 'What is ' + decWords(x) + (addQ ? ' plus ' : ' minus ') + decWords(y) + '?',
+        fact: 'The answer is ' + decWords(ans) + '.',
+        help: 'Line up the decimal points; fill empty places with zeros.' };
+    }
+    if (t === 'mult'){
+      const a = +((2 + rnd(88)) / 10).toFixed(1), b = 2 + rnd(7);
+      const ans = +(a * b).toFixed(1);
+      return { qtext: '<span class="big-eq">' + a + ' × ' + b + ' = ?</span>',
+        eq: a + ' × ' + b + ' = <span class="blank" id="blank">?</span>', kind: 'key', ans, dec: true,
+        phrase: 'What is ' + decWords(a) + ' times ' + numToWords(b) + '?',
+        fact: decWords(a) + ' times ' + numToWords(b) + ' is ' + decWords(ans) + '.',
+        help: 'Multiply ' + (a * 10) + ' × ' + b + ' first, then put the decimal point back (one place).' };
+    }
+    const w = 1 + rnd(9), d1 = 1 + rnd(9), d2 = 1 + rnd(9);
+    const x = w + '.' + d1 + d2;
+    const pi = rnd(2);
+    const digit = pi === 0 ? d1 : d2;
+    const val = pi === 0 ? digit / 10 : digit / 100;
+    const opts = new Set([val]);
+    [digit, digit / 10, digit / 100, digit / 1000].forEach(v => { if (opts.size < 4 && v !== val) opts.add(v); });
+    return { qtext: 'In <b>' + x + '</b>, what is the VALUE of the digit ' + digit + '?',
+      kind: 'choice', ans: val,
+      choices: [...opts].map(v => ({ t: String(v), v })).sort(() => Math.random() - 0.5),
+      phrase: 'In ' + decWords(x) + ', what is the value of the digit ' + numToWords(digit) + '?',
+      fact: 'That ' + numToWords(digit) + ' stands for ' + decWords(val) + '.',
+      help: 'It sits in the ' + DEC_PLACES[pi] + ' place, so it is worth ' + digit + ' ' + DEC_PLACES[pi] + '.' };
+  }
+  // lv4
+  const t = pick(['div','round2','thou']);
+  if (t === 'div'){
+    const b = 2 + rnd(7), n = +((2 + rnd(88)) / 10).toFixed(1);
+    const a = +(n * b).toFixed(1);
+    return { qtext: '<span class="big-eq">' + a + ' ÷ ' + b + ' = ?</span>',
+      eq: a + ' ÷ ' + b + ' = <span class="blank" id="blank">?</span>', kind: 'key', ans: n, dec: true,
+      phrase: 'What is ' + decWords(a) + ' divided by ' + numToWords(b) + '?',
+      fact: decWords(a) + ' divided by ' + numToWords(b) + ' is ' + decWords(n) + '.',
+      help: 'Divide ' + (a * 10) + ' by ' + b + ' first, then put the decimal point back.' };
+  }
+  if (t === 'round2'){
+    const x = +((1 + rnd(8)) + (1 + rnd(899)) / 1000 + (rnd(2) ? 0.0005 : 0)).toFixed(3);
+    const dp = 1 + rnd(2);
+    const ans = +x.toFixed(dp);
+    return { qtext: 'Round <b>' + x + '</b> to ' + dp + ' decimal place' + (dp > 1 ? 's' : '') + '.',
+      eq: x + ' ≈ <span class="blank" id="blank">?</span>', kind: 'key', ans, dec: true,
+      phrase: 'Round ' + decWords(x) + ' to ' + numToWords(dp) + ' decimal place' + (dp > 1 ? 's' : '') + '.',
+      fact: decWords(x) + ' rounds to ' + decWords(ans) + '.',
+      help: 'Look one place further right: 5 or more rounds up.' };
+  }
+  const n = 1 + rnd(999);
+  const ans = +(n / 1000).toFixed(3);
+  return { qtext: 'Write ' + frx(n, 1000) + ' as a decimal.',
+    eq: frx(n, 1000) + ' = <span class="blank" id="blank">?</span>', kind: 'key', ans, dec: true,
+    phrase: 'Write ' + numToWords(n) + ' thousandths as a decimal.',
+    fact: numToWords(n) + ' thousandths is ' + decWords(ans) + '.',
+    help: 'Thousandths fill three places after the point: 45/1000 = 0.045.' };
+}
+
+/* ---- geometry SVG helpers ---- */
+function rectSVG(wU, hU, unit, showW, showH){
+  const maxW = 230, maxH = 120;
+  const sc = Math.min(maxW / wU, maxH / hU);
+  const W = Math.max(40, wU * sc), H = Math.max(30, hU * sc);
+  return '<svg width="' + (W + 60) + '" height="' + (H + 46) + '">' +
+    '<rect x="30" y="8" width="' + W + '" height="' + H + '" fill="#E6FAF1" stroke="#2B2E5C" stroke-width="3.5" rx="2"/>' +
+    (showW ? '<text x="' + (30 + W / 2) + '" y="' + (H + 34) + '" text-anchor="middle" font-size="17" font-weight="bold" fill="#2B2E5C">' + wU + ' ' + unit + '</text>' : '') +
+    (showH ? '<text x="16" y="' + (12 + H / 2) + '" text-anchor="middle" font-size="17" font-weight="bold" fill="#2B2E5C" transform="rotate(-90 16 ' + (12 + H / 2) + ')">' + hU + ' ' + unit + '</text>' : '') +
+    '</svg>';
+}
+function lshapeSVG(A, B, a, b, unit){
+  // outer A×B rectangle with an a×b bite removed from the top-right corner
+  const sc = Math.min(220 / A, 130 / B);
+  const W = A * sc, H = B * sc, w2 = a * sc, h2 = b * sc;
+  const x0 = 34, y0 = 12;
+  const pts = [[x0, y0], [x0 + W - w2, y0], [x0 + W - w2, y0 + h2], [x0 + W, y0 + h2], [x0 + W, y0 + H], [x0, y0 + H]];
+  const lbl = (x, y, t, rot) => '<text x="' + x + '" y="' + y + '" text-anchor="middle" font-size="15" font-weight="bold" fill="#2B2E5C"' + (rot ? ' transform="rotate(-90 ' + x + ' ' + y + ')"' : '') + '>' + t + ' ' + unit + '</text>';
+  return '<svg width="' + (W + 70) + '" height="' + (H + 44) + '">' +
+    '<polygon points="' + pts.map(p => p.join(',')).join(' ') + '" fill="#F3ECFF" stroke="#2B2E5C" stroke-width="3.5"/>' +
+    lbl(x0 + W / 2, y0 + H + 24, A) +
+    lbl(x0 - 16, y0 + H / 2, B, true) +
+    lbl(x0 + W - w2 / 2, y0 + h2 + 18, a) +
+    lbl(x0 + W + 16, y0 + h2 / 2 + 4, b, true) +
+    '</svg>';
+}
+function angleSVG(deg){
+  const C = 90, L = 78;
+  const a = deg * Math.PI / 180;
+  const x2 = C + L * Math.cos(-a), y2 = C + L * Math.sin(-a);
+  const large = deg > 180 ? 1 : 0;
+  const r = 26;
+  const ax = C + r * Math.cos(0), ay = C;
+  const bx = C + r * Math.cos(-a), by = C + r * Math.sin(-a);
+  return '<svg width="185" height="110" viewBox="0 0 185 110"><g transform="translate(6,8)">' +
+    '<line x1="' + C + '" y1="' + C + '" x2="' + (C + L) + '" y2="' + C + '" stroke="#2B2E5C" stroke-width="4" stroke-linecap="round"/>' +
+    '<line x1="' + C + '" y1="' + C + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#2B2E5C" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M ' + ax + ' ' + ay + ' A ' + r + ' ' + r + ' 0 ' + large + ' 0 ' + bx + ' ' + by + '" fill="none" stroke="#E0503F" stroke-width="3"/>' +
+    '<circle cx="' + C + '" cy="' + C + '" r="4" fill="#2B2E5C"/>' +
+    '</g></svg>';
+}
+function genGeo(lv){
+  const gunit = pick(['cm', 'm']);
+  if (lv === 1){
+    if (Math.random() < 0.55){
+      const square = Math.random() < 0.4;
+      const w = 3 + rnd(12), h = square ? w : 2 + rnd(9);
+      const ans = 2 * (w + h);
+      return { qtext: 'Find the PERIMETER of this ' + (square ? 'square' : 'rectangle') + '.',
+        vis: rectSVG(w, h, gunit, true, !square),
+        eq: 'perimeter = <span class="blank" id="blank">?</span> ' + gunit, kind: 'key', ans,
+        phrase: 'Find the perimeter of the ' + (square ? 'square with sides ' + numToWords(w) : 'rectangle, ' + numToWords(w) + ' by ' + numToWords(h)) + ' ' + gunit,
+        fact: 'The perimeter is ' + numToWords(ans) + ' ' + gunit + '.',
+        help: 'Perimeter is the distance all the way round: add all four sides.' };
+    }
+    const kinds = [['right angle', 90, 90], ['acute angle', 25, 70], ['obtuse angle', 110, 160]];
+    const [name, lo, hi] = pick(kinds);
+    const deg = lo === hi ? 90 : lo + 5 * rnd((hi - lo) / 5 + 1);
+    return { qtext: 'What kind of angle is this?',
+      vis: angleSVG(deg),
+      kind: 'choice', ans: name,
+      choices: kinds.map(k => ({ t: k[0], v: k[0] })).concat([{ t: 'straight line', v: 'straight' }]),
+      phrase: 'What kind of angle is this?',
+      fact: 'It is an ' + name + (name === 'right angle' ? ' — exactly 90 degrees.' : name === 'acute angle' ? ' — smaller than 90 degrees.' : ' — between 90 and 180 degrees.'),
+      help: 'Compare it with a square corner (90°): smaller is acute, bigger is obtuse.' };
+  }
+  if (lv === 2){
+    const t = pick(['area', 'sym', 'estimate']);
+    if (t === 'area'){
+      const square = Math.random() < 0.4;
+      const w = 3 + rnd(9), h = square ? w : 2 + rnd(8);
+      const ans = w * h;
+      return { qtext: 'Find the AREA of this ' + (square ? 'square' : 'rectangle') + '.',
+        vis: rectSVG(w, h, gunit, true, !square),
+        eq: 'area = <span class="blank" id="blank">?</span> ' + gunit + '²', kind: 'key', ans,
+        phrase: 'Find the area of the ' + (square ? 'square with sides ' + numToWords(w) : 'rectangle, ' + numToWords(w) + ' by ' + numToWords(h)) + ' ' + gunit,
+        fact: numToWords(w) + ' times ' + numToWords(h) + ' gives an area of ' + numToWords(ans) + ' square ' + gunit + '.',
+        help: 'Area of a rectangle = length × breadth.' };
+    }
+    if (t === 'sym'){
+      const symmetric = ['A','H','I','M','O','T','U','V','W','X','Y'];
+      const not = ['F','G','J','L','N','P','Q','R','S','Z'];
+      const ans = pick(symmetric);
+      const opts = new Set([ans]);
+      while (opts.size < 4) opts.add(pick(not));
+      return { qtext: 'Which letter has a LINE OF SYMMETRY?',
+        kind: 'choice', ans,
+        choices: [...opts].map(v => ({ t: '<span style="font-size:34px;font-family:Arial">' + v + '</span>', v })).sort(() => Math.random() - 0.5),
+        phrase: 'Which letter has a line of symmetry?',
+        fact: 'The letter ' + ans + ' folds onto itself exactly.',
+        help: 'Imagine folding the letter in half — do the two halves match exactly?' };
+    }
+    const deg = 10 * (2 + rnd(15));
+    const opts = new Set([deg]);
+    [deg + 30, deg - 30, deg + 60, deg - 60].forEach(v => { if (v >= 10 && v <= 180 && opts.size < 4) opts.add(v); });
+    return { qtext: 'About how many DEGREES is this angle?',
+      vis: angleSVG(deg),
+      kind: 'choice', ans: deg,
+      choices: [...opts].map(v => ({ t: v + '°', v })).sort(() => Math.random() - 0.5),
+      phrase: 'About how many degrees is this angle?',
+      fact: 'It measures ' + numToWords(deg) + ' degrees.',
+      help: 'A square corner is 90°, half of that is 45°, a straight line is 180°.' };
+  }
+  if (lv === 3){
+    const t = pick(['comp', 'missing']);
+    if (t === 'comp'){
+      const A = 6 + rnd(8), B = 4 + rnd(6), a = 2 + rnd(A - 4), b = 2 + rnd(B - 3);
+      const wantArea = Math.random() < 0.6;
+      const ans = wantArea ? A * B - a * b : 2 * (A + B);
+      return { qtext: 'Find the ' + (wantArea ? 'AREA' : 'PERIMETER') + ' of this figure.',
+        vis: lshapeSVG(A, B, a, b, gunit),
+        eq: (wantArea ? 'area' : 'perimeter') + ' = <span class="blank" id="blank">?</span> ' + gunit + (wantArea ? '²' : ''),
+        kind: 'key', ans,
+        phrase: 'Find the ' + (wantArea ? 'area' : 'perimeter') + ' of the figure.',
+        fact: 'The ' + (wantArea ? 'area is ' + numToWords(ans) + ' square ' + gunit : 'perimeter is ' + numToWords(ans) + ' ' + gunit) + '.',
+        help: wantArea ? 'Big rectangle minus the missing corner: ' + A + '×' + B + ' − ' + a + '×' + b + '.'
+                       : 'Slide the two short cut edges out — the perimeter equals the full ' + A + '×' + B + ' rectangle!' };
+    }
+    const w = 4 + rnd(10), h = 2 + rnd(8);
+    const per = 2 * (w + h);
+    return { qtext: 'The perimeter of this rectangle is <b>' + per + ' ' + gunit + '</b>. Find the missing side.',
+      vis: rectSVG(w, h, gunit, true, false).replace('</svg>',
+        '<text x="16" y="70" text-anchor="middle" font-size="18" font-weight="bold" fill="#E0503F" transform="rotate(-90 16 70)">?</text></svg>'),
+      eq: '? = <span class="blank" id="blank">?</span> ' + gunit, kind: 'key', ans: h,
+      phrase: 'The perimeter is ' + numToWords(per) + ' ' + gunit + ' and one side is ' + numToWords(w) + '. Find the missing side.',
+      fact: 'The missing side is ' + numToWords(h) + ' ' + gunit + '.',
+      help: 'Two sides of ' + w + ' make ' + 2 * w + '. What is left, shared between the other two sides?' };
+  }
+  // lv4: nets + harder composite
+  if (Math.random() < 0.5){
+    const NETS = [
+      ['cube', '<svg width="150" height="110"><g fill="#E6FAF1" stroke="#2B2E5C" stroke-width="2.5">' +
+        '<rect x="10" y="40" width="26" height="26"/><rect x="36" y="40" width="26" height="26"/><rect x="62" y="40" width="26" height="26"/><rect x="88" y="40" width="26" height="26"/>' +
+        '<rect x="36" y="14" width="26" height="26"/><rect x="36" y="66" width="26" height="26"/></g></svg>'],
+      ['square pyramid', '<svg width="140" height="130"><g fill="#FFF0EC" stroke="#2B2E5C" stroke-width="2.5">' +
+        '<rect x="50" y="46" width="38" height="38"/>' +
+        '<polygon points="50,46 88,46 69,14"/><polygon points="50,84 88,84 69,116"/>' +
+        '<polygon points="50,46 50,84 18,65"/><polygon points="88,46 88,84 120,65"/></g></svg>'],
+      ['triangular prism', '<svg width="160" height="120"><g fill="#EAF4FF" stroke="#2B2E5C" stroke-width="2.5">' +
+        '<rect x="20" y="34" width="40" height="46"/><rect x="60" y="34" width="40" height="46"/><rect x="100" y="34" width="40" height="46"/>' +
+        '<polygon points="60,34 100,34 80,8"/><polygon points="60,80 100,80 80,106"/></g></svg>']
+    ];
+    const [name, svg] = pick(NETS);
+    return { qtext: 'This net folds up into which solid?',
+      vis: svg,
+      kind: 'choice', ans: name,
+      choices: [['cube'], ['square pyramid'], ['triangular prism'], ['cylinder']].map(([v]) => ({ t: v, v })),
+      phrase: 'This net folds up into which solid?',
+      fact: 'It folds into a ' + name + '.',
+      help: name === 'cube' ? 'Six squares — count them!' :
+            name === 'square pyramid' ? 'One square base and four triangles that meet at a point.' :
+            'Two triangle ends joined by three rectangles.' };
+  }
+  const A = 8 + rnd(10), B = 5 + rnd(7), a = 2 + rnd(A - 5), b = 2 + rnd(B - 3);
+  const ans = A * B - a * b;
+  return { qtext: 'Find the AREA of this figure.',
+    vis: lshapeSVG(A, B, a, b, gunit),
+    eq: 'area = <span class="blank" id="blank">?</span> ' + gunit + '²', kind: 'key', ans,
+    phrase: 'Find the area of the figure.',
+    fact: 'The area is ' + numToWords(ans) + ' square ' + gunit + '.',
+    help: 'Whole rectangle ' + A + '×' + B + ' = ' + A * B + ', minus the cut corner ' + a + '×' + b + ' = ' + a * b + '.' };
+}
+
+/* ---- data helpers ---- */
+const DATA_NAMES = ['Hana', 'Mei', 'Arif', 'Devi', 'Ben', 'Xin Yi'];
+const DATA_THINGS = ['stickers', 'storybooks', 'seashells', 'marbles', 'origami stars', 'trading cards'];
+function tableHTML(names, values, thing){
+  return '<table style="margin:0 auto;border-collapse:collapse;font-size:17px">' +
+    '<tr>' + names.map(n => '<th style="border:2.5px solid #2B2E5C;padding:5px 12px;background:#FFF3C8">' + n + '</th>').join('') + '</tr>' +
+    '<tr>' + values.map(v => '<td style="border:2.5px solid #2B2E5C;padding:5px 12px;text-align:center;font-weight:bold">' + v + '</td>').join('') + '</tr></table>' +
+    '<div style="font-size:14px;font-weight:bold;margin-top:4px">Number of ' + thing + '</div>';
+}
+function barGraphSVG(names, values, step){
+  const W = 300, H = 190, x0 = 40, y0 = 150, maxV = Math.max(...values);
+  const top = Math.ceil(maxV / step) * step;
+  const bw = Math.min(46, (W - x0 - 10) / names.length - 12);
+  let s = '<svg width="' + W + '" height="' + H + '" style="font-family:inherit">';
+  for (let v = 0; v <= top; v += step){
+    const y = y0 - (v / top) * 120;
+    s += '<line x1="' + x0 + '" y1="' + y + '" x2="' + (W - 8) + '" y2="' + y + '" stroke="#D6CFEF" stroke-width="1"/>' +
+         '<text x="' + (x0 - 6) + '" y="' + (y + 4) + '" text-anchor="end" font-size="12" font-weight="bold" fill="#2B2E5C">' + v + '</text>';
+  }
+  names.forEach((n, i) => {
+    const x = x0 + 14 + i * ((W - x0 - 20) / names.length);
+    const h = (values[i] / top) * 120;
+    s += '<rect x="' + x + '" y="' + (y0 - h) + '" width="' + bw + '" height="' + h + '" fill="' + ['#79DDBD','#FFB6D4','#8CCEF9','#FFDD70'][i % 4] + '" stroke="#2B2E5C" stroke-width="2.5"/>' +
+         '<text x="' + (x + bw / 2) + '" y="' + (y0 + 16) + '" text-anchor="middle" font-size="13" font-weight="bold" fill="#2B2E5C">' + n + '</text>';
+  });
+  return s + '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + (W - 8) + '" y2="' + y0 + '" stroke="#2B2E5C" stroke-width="2.5"/></svg>';
+}
+function lineGraphSVG(labels, values, step, unit){
+  const W = 310, H = 200, x0 = 42, y0 = 156, plotW = W - x0 - 16;
+  const top = Math.ceil(Math.max(...values) / step) * step;
+  let s = '<svg width="' + W + '" height="' + H + '" style="font-family:inherit">';
+  for (let v = 0; v <= top; v += step){
+    const y = y0 - (v / top) * 128;
+    s += '<line x1="' + x0 + '" y1="' + y + '" x2="' + (W - 10) + '" y2="' + y + '" stroke="#D6CFEF" stroke-width="1"/>' +
+         '<text x="' + (x0 - 5) + '" y="' + (y + 4) + '" text-anchor="end" font-size="12" font-weight="bold" fill="#2B2E5C">' + v + '</text>';
+  }
+  const pts = values.map((v, i) => [x0 + (i / (values.length - 1)) * plotW, y0 - (v / top) * 128]);
+  s += '<polyline points="' + pts.map(p => p.join(',')).join(' ') + '" fill="none" stroke="#E0503F" stroke-width="3"/>';
+  pts.forEach((p, i) => {
+    s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="4.5" fill="#fff" stroke="#2B2E5C" stroke-width="2.5"/>' +
+         '<text x="' + p[0] + '" y="' + (y0 + 16) + '" text-anchor="middle" font-size="12" font-weight="bold" fill="#2B2E5C">' + labels[i] + '</text>';
+  });
+  return s + '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + (W - 10) + '" y2="' + y0 + '" stroke="#2B2E5C" stroke-width="2.5"/>' +
+    (unit ? '<text x="8" y="14" font-size="12" font-weight="bold" fill="#2B2E5C">' + unit + '</text>' : '') + '</svg>';
+}
+function genData(lv){
+  if (lv === 1){
+    const names = DATA_NAMES.slice(0, 4).sort(() => Math.random() - 0.5);
+    const thing = pick(DATA_THINGS);
+    const values = names.map(() => 3 + rnd(30));
+    if (Math.random() < 0.55){
+      const i = rnd(4);
+      return { qtext: 'How many ' + thing + ' does ' + names[i] + ' have?',
+        vis: tableHTML(names, values, thing),
+        eq: '<span class="blank" id="blank">?</span> ' + thing, kind: 'key', ans: values[i],
+        phrase: 'Read the table. How many ' + thing + ' does ' + names[i] + ' have?',
+        fact: names[i] + ' has ' + numToWords(values[i]) + ' ' + thing + '.',
+        help: 'Find ' + names[i] + '\u2019s column and read the number below.' };
+    }
+    const ans = values.reduce((a, b) => a + b, 0);
+    return { qtext: 'How many ' + thing + ' do they have ALTOGETHER?',
+      vis: tableHTML(names, values, thing),
+      eq: 'total = <span class="blank" id="blank">?</span>', kind: 'key', ans,
+      phrase: 'How many ' + thing + ' altogether?',
+      fact: 'Altogether they have ' + numToWords(ans) + ' ' + thing + '.',
+      help: 'Add all four numbers in the table.' };
+  }
+  if (lv === 2){
+    const names = DATA_NAMES.slice(0, 4).sort(() => Math.random() - 0.5);
+    const thing = pick(DATA_THINGS);
+    const step = pick([2, 5, 10]);
+    const values = [1, 2, 3, 4, 5, 6, 7].sort(() => Math.random() - 0.5).slice(0, 4).map(k => step * k);   // always distinct
+    const t = pick(['read', 'most', 'diff']);
+    if (t === 'read'){
+      const i = rnd(4);
+      return { qtext: 'How many ' + thing + ' does ' + names[i] + ' have?',
+        vis: barGraphSVG(names, values, step),
+        eq: '<span class="blank" id="blank">?</span>', kind: 'key', ans: values[i],
+        phrase: 'Read the bar graph. How many ' + thing + ' does ' + names[i] + ' have?',
+        fact: names[i] + ' has ' + numToWords(values[i]) + '.',
+        help: 'Follow the top of ' + names[i] + '\u2019s bar across to the scale. Each grid line is ' + step + '.' };
+    }
+    if (t === 'most'){
+      const most = Math.random() < 0.5;
+      const idx = values.indexOf(most ? Math.max(...values) : Math.min(...values));
+      return { qtext: 'Who has the ' + (most ? 'MOST' : 'FEWEST') + ' ' + thing + '?',
+        vis: barGraphSVG(names, values, step),
+        kind: 'choice', ans: names[idx],
+        choices: names.map(n => ({ t: n, v: n })),
+        phrase: 'Who has the ' + (most ? 'most' : 'fewest') + ' ' + thing + '?',
+        fact: names[idx] + ' has the ' + (most ? 'most' : 'fewest') + '.',
+        help: 'Look for the ' + (most ? 'tallest' : 'shortest') + ' bar.' };
+    }
+    let i = rnd(4), j = rnd(4);
+    while (j === i || values[i] === values[j]) j = rnd(4);
+    const ans = Math.abs(values[i] - values[j]);
+    return { qtext: 'How many MORE ' + thing + ' does ' + (values[i] > values[j] ? names[i] : names[j]) + ' have than ' + (values[i] > values[j] ? names[j] : names[i]) + '?',
+      vis: barGraphSVG(names, values, step),
+      eq: '<span class="blank" id="blank">?</span> more', kind: 'key', ans,
+      phrase: 'How many more?',
+      fact: 'The difference is ' + numToWords(ans) + '.',
+      help: 'Read both bars, then subtract the smaller from the bigger.' };
+  }
+  // lv3 & lv4: line graphs
+  const scen = pick([
+    { labels: ['9 am','10 am','11 am','12 pm','1 pm','2 pm'], unit: 'Visitors', thing: 'people at the library' },
+    { labels: ['Mon','Tue','Wed','Thu','Fri'], unit: 'Books', thing: 'books borrowed' },
+    { labels: ['Jan','Feb','Mar','Apr','May'], unit: '$', thing: 'savings' }
+  ]);
+  const step = pick([5, 10, 20]);
+  const values = [1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5)
+    .slice(0, scen.labels.length).map(k => step * k);              // always distinct
+  if (lv === 3){
+    const t = pick(['read', 'diff']);
+    if (t === 'read'){
+      const i = rnd(values.length);
+      return { qtext: 'Read the line graph: what was the value at <b>' + scen.labels[i] + '</b>?',
+        vis: lineGraphSVG(scen.labels, values, step, scen.unit),
+        eq: '<span class="blank" id="blank">?</span>', kind: 'key', ans: values[i],
+        phrase: 'What was the value at ' + scen.labels[i] + '?',
+        fact: 'At ' + scen.labels[i] + ' it was ' + numToWords(values[i]) + '.',
+        help: 'Find ' + scen.labels[i] + ' along the bottom, go up to the dot, then across to the scale.' };
+    }
+    let i = rnd(values.length), j = rnd(values.length);
+    while (j === i || values[i] === values[j]) j = rnd(values.length);
+    const ans = Math.abs(values[i] - values[j]);
+    return { qtext: 'How much did the ' + scen.thing + ' change between <b>' + scen.labels[Math.min(i,j)] + '</b> and <b>' + scen.labels[Math.max(i,j)] + '</b>?',
+      vis: lineGraphSVG(scen.labels, values, step, scen.unit),
+      eq: 'change = <span class="blank" id="blank">?</span>', kind: 'key', ans,
+      phrase: 'How much did it change between ' + scen.labels[Math.min(i,j)] + ' and ' + scen.labels[Math.max(i,j)] + '?',
+      fact: 'The change is ' + numToWords(ans) + '.',
+      help: 'Read both dots, then find the difference.' };
+  }
+  const t = pick(['rise', 'total']);
+  if (t === 'rise'){
+    let bi = 0, best = -1e9;
+    for (let i = 1; i < values.length; i++){ const d = values[i] - values[i-1]; if (d > best){ best = d; bi = i; } }
+    const ans = scen.labels[bi-1] + ' → ' + scen.labels[bi];
+    const opts = new Set([ans]);
+    for (let i = 1; i < values.length && opts.size < 4; i++) opts.add(scen.labels[i-1] + ' → ' + scen.labels[i]);
+    return { qtext: 'Between which two times did the ' + scen.thing + ' INCREASE the most?',
+      vis: lineGraphSVG(scen.labels, values, step, scen.unit),
+      kind: 'choice', ans,
+      choices: [...opts].map(v => ({ t: v, v })).sort(() => Math.random() - 0.5),
+      phrase: 'Between which two points did it increase the most?',
+      fact: 'The biggest rise was ' + ans + '.',
+      help: 'Look for the steepest climb between two dots.' };
+  }
+  const ans = values.reduce((a, b) => a + b, 0);
+  return { qtext: 'What is the TOTAL of all the values shown?',
+    vis: lineGraphSVG(scen.labels, values, step, scen.unit),
+    eq: 'total = <span class="blank" id="blank">?</span>', kind: 'key', ans,
+    phrase: 'What is the total of all the values shown?',
+    fact: 'The total is ' + numToWords(ans) + '.',
+    help: 'Read every dot carefully, then add them all.' };
+}
+
+const GENS = { num: genNum, addsub: genAddSub, muldiv: genMulDiv, frac: genFrac, money: genMoney, time: genTime, dec: genDec, geo: genGeo, data: genData };
+
+
+/* ============================================================
+   HANDWRITTEN ANSWERS — she writes with the stylus, a small
+   neural net (trained on 120k handwritten digits, 98.4% test
+   accuracy, quantised to 308 KB) reads it — fully offline.
+   ============================================================ */
+let inputMode = 'write';                    // 'write' | 'pad'
+let NET = null;                             // decoded layers
+fetch('./digit-net.json')
+  .then(r => r.json())
+  .then(j => {
+    NET = j.layers.map(L => {
+      const wq = Uint8Array.from(atob(L.w), c => c.charCodeAt(0));
+      const w = new Float32Array(wq.length);
+      for (let i = 0; i < wq.length; i++){
+        const v = wq[i] > 127 ? wq[i] - 256 : wq[i];
+        w[i] = v * L.scale;
+      }
+      const bb = Uint8Array.from(atob(L.b), c => c.charCodeAt(0));
+      return { nin: L.in, nout: L.out, w, b: new Float32Array(bb.buffer) };
+    });
+    if (mode !== 'home' && MODES.includes(mode)) buildAnswerUI();
+  })
+  .catch(() => { NET = null; inputMode = 'pad'; });
+function netClassify(px /* Float32Array(784) */){
+  let a = px;
+  for (let li = 0; li < NET.length; li++){
+    const L = NET[li];
+    const out = new Float32Array(L.nout);
+    out.set(L.b);
+    for (let i = 0; i < L.nin; i++){
+      const xi = a[i];
+      if (xi === 0) continue;
+      const off = i * L.nout;
+      for (let j = 0; j < L.nout; j++) out[j] += xi * L.w[off + j];
+    }
+    if (li < NET.length - 1){ for (let j = 0; j < L.nout; j++) if (out[j] < 0) out[j] = 0; }
+    a = out;
+  }
+  let mx = -1e9; for (let j = 0; j < 10; j++) mx = Math.max(mx, a[j]);
+  let sum = 0; const e = new Float32Array(10);
+  for (let j = 0; j < 10; j++){ e[j] = Math.exp(a[j] - mx); sum += e[j]; }
+  let best = 0; for (let j = 1; j < 10; j++) if (e[j] > e[best]) best = j;
+  return { digit: best, conf: e[best] / sum };
+}
+
+/* ---- the writing pad ---- */
+const wpad = {
+  canvas: null, ctx: null, strokes: [], live: null, timer: null, minConf: 1
+};
+function wpInit(){
+  if (wpad.canvas) return;
+  wpad.canvas = document.getElementById('writePad');
+  wpad.ctx = wpad.canvas.getContext('2d');
+  const c = wpad.canvas;
+  c.addEventListener('pointerdown', ev => {
+    ev.preventDefault(); audio();
+    if (padLocked) return;
+    c.setPointerCapture(ev.pointerId);
+    wpad.live = [wpPt(ev)];
+    clearTimeout(wpad.timer);
+  });
+  c.addEventListener('pointermove', ev => {
+    if (!wpad.live) return;
+    ev.preventDefault();
+    wpad.live.push(wpPt(ev));
+    wpDraw();
+  });
+  ['pointerup','pointercancel'].forEach(t => c.addEventListener(t, () => {
+    if (!wpad.live) return;
+    if (wpad.live.length > 1) wpad.strokes.push(wpad.live);
+    wpad.live = null;
+    wpDraw();
+    clearTimeout(wpad.timer);
+    wpad.timer = setTimeout(wpRecognize, 350);
+  }));
+  document.getElementById('wUndo').addEventListener('click', () => {
+    sndTap(); wpad.strokes.pop(); wpDraw(); wpRecognize();
+  });
+  document.getElementById('wClear').addEventListener('click', () => { sndTap(); wpClear(); });
+  document.getElementById('wOk').addEventListener('click', () => submitEntry());
+  document.getElementById('toPad').addEventListener('click', () => setInputMode('pad'));
+  document.getElementById('toWrite').addEventListener('click', () => setInputMode('write'));
+}
+function setInputMode(m){
+  sndTap();
+  inputMode = (m === 'write' && NET) ? 'write' : 'pad';
+  store.set('hq_input', inputMode);
+  const r1 = document.getElementById('inWrite'), r2 = document.getElementById('inPad');
+  if (r1){ r1.classList.toggle('on', inputMode === 'write'); r2.classList.toggle('on', inputMode === 'pad'); }
+  if (MODES.includes(mode) && q.kind === 'key'){ q.entry = ''; buildAnswerUI(); renderEntry(); }
+}
+function wpSize(){
+  const c = wpad.canvas, dpr = window.devicePixelRatio || 1;
+  const w = c.clientWidth || 300, h = c.clientHeight || 190;
+  if (c.width !== Math.round(w * dpr)){
+    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+  }
+  wpad.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function wpPt(ev){
+  const r = wpad.canvas.getBoundingClientRect();
+  return [ev.clientX - r.left, ev.clientY - r.top];
+}
+function wpDraw(){
+  wpSize();
+  const ctx = wpad.ctx, c = wpad.canvas;
+  ctx.clearRect(0, 0, c.clientWidth, c.clientHeight);
+  // faint guide line
+  ctx.strokeStyle = '#EAE3FA'; ctx.lineWidth = 1.5; ctx.setLineDash([6,6]);
+  ctx.beginPath(); ctx.moveTo(10, c.clientHeight - 34); ctx.lineTo(c.clientWidth - 10, c.clientHeight - 34); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle = '#2B2E5C'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 7;
+  const all = wpad.live ? wpad.strokes.concat([wpad.live]) : wpad.strokes;
+  all.forEach(s => {
+    ctx.beginPath();
+    s.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+    ctx.stroke();
+  });
+}
+function wpClear(silent){
+  wpad.strokes = []; wpad.live = null; wpad.minConf = 1;
+  clearTimeout(wpad.timer);
+  if (wpad.canvas) wpDraw();
+  q.entry = '';
+  renderEntry();
+}
+function strokeBox(s){
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  s.forEach(p => { x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]); x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]); });
+  return { x0, y0, x1, y1, w: x1 - x0, h: y1 - y0 };
+}
+/* group strokes into digits by horizontal position */
+function wpSegment(){
+  const items = wpad.strokes.map(s => ({ s, b: strokeBox(s) })).sort((a, b) => a.b.x0 - b.b.x0);
+  const padH = wpad.canvas ? wpad.canvas.clientHeight : 190;
+  const gapThr = Math.max(14, padH * 0.09);
+  const groups = [];
+  items.forEach(it => {
+    const g = groups[groups.length - 1];
+    if (g){
+      const overlap = Math.min(g.x1, it.b.x1) - Math.max(g.x0, it.b.x0);
+      const gap = it.b.x0 - g.x1;
+      if (overlap > 0.35 * Math.min(g.x1 - g.x0, it.b.w || 1) || gap < gapThr){
+        g.strokes.push(it.s);
+        g.x0 = Math.min(g.x0, it.b.x0); g.x1 = Math.max(g.x1, it.b.x1);
+        g.y0 = Math.min(g.y0, it.b.y0); g.y1 = Math.max(g.y1, it.b.y1);
+        return;
+      }
+    }
+    groups.push({ strokes: [it.s], x0: it.b.x0, x1: it.b.x1, y0: it.b.y0, y1: it.b.y1 });
+  });
+  return groups;
+}
+/* rasterise one digit group MNIST-style: 20px box, centre of mass in 28×28 */
+function wpRaster(g){
+  const HI = 112, BOX = 80;
+  const hi = document.createElement('canvas'); hi.width = HI; hi.height = HI;
+  const hctx = hi.getContext('2d');
+  const w = Math.max(g.x1 - g.x0, 1), h = Math.max(g.y1 - g.y0, 1);
+  const sc = BOX / Math.max(w, h);
+  const ox = (HI - w * sc) / 2 - g.x0 * sc, oy = (HI - h * sc) / 2 - g.y0 * sc;
+  hctx.strokeStyle = '#fff'; hctx.lineCap = 'round'; hctx.lineJoin = 'round';
+  hctx.lineWidth = 9;
+  g.strokes.forEach(s => {
+    hctx.beginPath();
+    s.forEach((p, i) => { const X = p[0] * sc + ox, Y = p[1] * sc + oy; i ? hctx.lineTo(X, Y) : hctx.moveTo(X, Y); });
+    if (s.length === 1){ const X = s[0][0] * sc + ox, Y = s[0][1] * sc + oy; hctx.lineTo(X + 0.1, Y); }
+    hctx.stroke();
+  });
+  const lo = document.createElement('canvas'); lo.width = 28; lo.height = 28;
+  const lctx = lo.getContext('2d');
+  lctx.drawImage(hi, 0, 0, 28, 28);
+  const d = lctx.getImageData(0, 0, 28, 28).data;
+  let px = new Float32Array(784);
+  let sum = 0, sx = 0, sy = 0;
+  for (let i = 0; i < 784; i++){
+    const v = d[i * 4 + 3] / 255;          // alpha channel carries the ink
+    px[i] = v; sum += v;
+    sx += v * (i % 28); sy += v * Math.floor(i / 28);
+  }
+  if (sum > 0){
+    const dx = Math.round(13.5 - sx / sum), dy = Math.round(13.5 - sy / sum);
+    if (dx || dy){
+      const sh = new Float32Array(784);
+      for (let y = 0; y < 28; y++) for (let x = 0; x < 28; x++){
+        const nx = x + dx, ny = y + dy;
+        if (nx >= 0 && nx < 28 && ny >= 0 && ny < 28) sh[ny * 28 + nx] = px[y * 28 + x];
+      }
+      px = sh;
+    }
+  }
+  return px;
+}
+function wpRecognize(){
+  if (!NET || q.kind !== 'key') return;
+  if (!wpad.strokes.length){ q.entry = ''; wpad.minConf = 1; renderEntry(); return; }
+  const groups = wpSegment();
+  const heights = groups.map(g => g.y1 - g.y0);
+  const maxH = Math.max(...heights, 1);
+  let out = '', minConf = 1;
+  groups.forEach(g => {
+    const w = g.x1 - g.x0, h = g.y1 - g.y0;
+    if (w < 0.22 * maxH && h < 0.22 * maxH){        // tiny mark = decimal point
+      if (q.allowDot && !out.includes('.') && out.length) out += '.';
+      return;
+    }
+    const r = netClassify(wpRaster(g));
+    out += r.digit;
+    minConf = Math.min(minConf, r.conf);
+  });
+  const dot = out.indexOf('.');
+  if (dot !== -1) out = out.slice(0, dot + 1) + out.slice(dot + 1).replace(/\./g, '').slice(0, q.money ? 2 : 3);
+  else out = out.slice(0, 5);
+  q.entry = out;
+  wpad.minConf = minConf;
+  renderEntry();
+}
 
 /* ---------- ask + answer plumbing ---------- */
 document.getElementById('qtext').addEventListener('click', () => { if (q.phrase && ttsAllowed()) say(q.phrase, true); });
@@ -2077,6 +3127,8 @@ function newQuestion(){
   q.ans = spec.ans;
   q.choiceDefs = spec.choices || null;
   q.money = !!spec.money;
+  q.dec = !!spec.dec;
+  q.allowDot = q.money || q.dec;
   q.phrase = spec.phrase;
   q.fact = spec.fact;
   q.help = spec.help;
@@ -2109,12 +3161,16 @@ function newQuestion(){
 function lockPads(on){
   document.getElementById('pad').classList.toggle('locked', on);
   document.getElementById('kpad').classList.toggle('locked', on);
+  const w = document.getElementById('writePad');
+  if (w) w.style.opacity = on ? 0.5 : 1;
 }
 function buildAnswerUI(){
   const pad = document.getElementById('pad');
   const kwrap = document.getElementById('kwrap');
+  const wwrap = document.getElementById('wwrap');
   if (q.kind === 'choice'){
     kwrap.style.display = 'none';
+    wwrap.style.display = 'none';
     pad.style.display = 'grid';
     pad.innerHTML = '';
     (q.choiceDefs || []).forEach(c => {
@@ -2126,12 +3182,22 @@ function buildAnswerUI(){
     });
     return;
   }
+  if (inputMode === 'write' && NET){
+    pad.style.display = 'none';
+    kwrap.style.display = 'none';
+    wwrap.style.display = 'flex';
+    wpInit();
+    wpClear();
+    requestAnimationFrame(wpDraw);
+    return;
+  }
+  wwrap.style.display = 'none';
   kwrap.style.display = 'flex';
   pad.style.display = 'none';
   renderEntry();
   const kp = document.getElementById('kpad');
   kp.innerHTML = '';
-  const keys = ['7','8','9','4','5','6','1','2','3', q.money ? '.' : '', '0', '⌫'];
+  const keys = ['7','8','9','4','5','6','1','2','3', q.allowDot ? '.' : '', '0', '⌫'];
   keys.forEach(k => {
     const b = document.createElement('button');
     if (k === ''){ b.style.visibility = 'hidden'; b.textContent = '.'; }
@@ -2148,9 +3214,15 @@ function buildAnswerUI(){
   kp.appendChild(ok);
 }
 function renderEntry(){
-  const box = document.getElementById('entryBox');
   const shown = (q.money ? '$' : '') + q.entry;
-  box.innerHTML = shown.replace(/</g, '&lt;') + '<span class="cursor">|</span>';
+  const html = shown.replace(/</g, '&lt;') + '<span class="cursor">|</span>';
+  const b1 = document.getElementById('entryBox');
+  const b2 = document.getElementById('wEntry');
+  if (b1) b1.innerHTML = html;
+  if (b2){
+    b2.innerHTML = html;
+    b2.classList.toggle('unsure', wpad.minConf < 0.55 && q.entry !== '');
+  }
   const blank = document.getElementById('blank');
   if (blank) blank.textContent = q.entry === '' ? '?' : (q.money ? '$' : '') + q.entry;
 }
@@ -2158,10 +3230,10 @@ function keyTap(k){
   if (padLocked || q.kind !== 'key') return;
   audio(); sndTap();
   if (k === '⌫'){ q.entry = q.entry.slice(0, -1); }
-  else if (k === '.'){ if (q.money && !q.entry.includes('.') && q.entry.length) q.entry += '.'; }
+  else if (k === '.'){ if (q.allowDot && !q.entry.includes('.') && q.entry.length) q.entry += '.'; }
   else if (k !== ''){
     const dot = q.entry.indexOf('.');
-    if (dot !== -1 && q.entry.length - dot > 2) return;      // max 2 decimal places
+    if (dot !== -1 && q.entry.length - dot > (q.money ? 2 : 3)) return;   // 2 dp for money, 3 for decimals
     if (q.entry.replace('.', '').length >= 5) return;
     q.entry += k;
   }
@@ -2175,6 +3247,7 @@ function parseEntry(){
     const cs = (parts[1] || '').padEnd(2, '0').slice(0, 2);
     return d * 100 + (parseInt(cs || '0', 10) || 0);
   }
+  if (q.dec) return parseFloat(q.entry);
   return parseInt(q.entry, 10);
 }
 function submitEntry(){
@@ -2185,7 +3258,7 @@ function submitEntry(){
     document.getElementById('quizSpeech').textContent = 'Type your answer, then press ✓';
     return;
   }
-  resolveAnswer(v === q.ans, null);
+  resolveAnswer(q.dec ? Math.abs(v - q.ans) < 1e-6 : v === q.ans, null);
 }
 function choiceTap(v, btn){
   if (padLocked || q.kind !== 'choice') return;
@@ -2197,7 +3270,9 @@ function answerText(){
     const c = (q.choiceDefs || []).find(c => c.v === q.ans);
     return c ? c.t : String(q.ans);
   }
-  return (q.money ? fmtMoney(q.ans) : fmtNum(q.ans));
+  if (q.money) return fmtMoney(q.ans);
+  if (q.dec) return String(q.ans);
+  return fmtNum(q.ans);
 }
 function resolveAnswer(correct, btn){
   const sp = document.getElementById('quizSpeech');
@@ -2205,7 +3280,7 @@ function resolveAnswer(correct, btn){
     padLocked = true;
     if (btn) btn.classList.add('right');
     const blank = document.getElementById('blank');
-    if (blank) blank.innerHTML = q.kind === 'choice' ? answerText() : (q.money ? fmtMoney(q.ans) : fmtNum(q.ans));
+    if (blank) blank.innerHTML = answerText();
     const first = q.tries === 0;
     progress[mode]++; saveProg();
     recordAnswer(mode, first, Date.now() - (q.asked || 0));
@@ -2231,7 +3306,10 @@ function resolveAnswer(correct, btn){
     loseStar();
     bumpStreak(false);
     sayWrong();
-    if (q.kind === 'key'){ q.entry = ''; renderEntry(); }
+    if (q.kind === 'key'){
+      if (inputMode === 'write' && NET) wpClear();
+      else { q.entry = ''; renderEntry(); }
+    }
     const lockMs = Math.min(5000, 1000 + 1200 * (q.tries - 1));
     padLocked = true;
     lockPads(true);
@@ -2272,34 +3350,43 @@ function showHelp(){
    ============================================================ */
 const zap = { ans: 0, cands: [], locked: false, popTimer: null, tos: [], sinceAns: 9, wrongs: 0 };
 const zapField = document.getElementById('zapField');
-const PATCH_POS = [[2, 16], [34, 4], [64, 16], [12, 48], [50, 50]];   // [left%, top%]
+const PATCH_POS = [[2, 12], [34, 2], [66, 12], [16, 30], [50, 30], [2, 52], [63, 52]];   // [left%, top%] — 7 holes
 let patches = [];
 
 function zapQuestion(){
   zap.locked = false;
-  zap.sinceAns = 9;
+  zap.sinceAns = 0;                        // no free answer on the first pop
   zap.wrongs = 0;
   zap.asked = Date.now();
   const lv = level('zap');
-  const tables = lv === 1 ? [2, 3, 4, 5, 10] : [6, 7, 8, 9];
-  const b = pick(lv === 3 ? [2, 3, 4, 5, 6, 7, 8, 9, 10] : tables);
-  const n = 2 + rnd(9);
+  let n, b;
+  if (lv >= 4){                            // P4 bridge: 2-digit × 1-digit and matching ÷
+    n = 11 + rnd(9); b = 3 + rnd(7);
+  } else {
+    const tables = lv === 1 ? [2, 3, 4, 5, 10] : [6, 7, 8, 9];
+    b = pick(lv >= 3 ? [2, 3, 4, 5, 6, 7, 8, 9, 10] : tables);
+    n = 2 + rnd(9);
+  }
   const isDiv = lv >= 2 && Math.random() < 0.35;
   if (isDiv){
     zap.ans = n;
     document.getElementById('zapQ').textContent = (b * n) + ' ÷ ' + b + ' = ?';
     if (ttsQuestions()) say('What is ' + numToWords(b * n) + ' divided by ' + numToWords(b) + '?');
-    zap.cands = [n];
-    [n + 1, n - 1, n + 2].forEach(d => { if (d >= 1 && d <= 12 && !zap.cands.includes(d)) zap.cands.push(d); });
+    const set = [n];
+    [n + 1, n - 1, n + 2, n - 2, n + b].forEach(d => { if (d >= 1 && d <= 25 && !set.includes(d)) set.push(d); });
+    zap.cands = set;
   } else {
     zap.ans = n * b;
     document.getElementById('zapQ').textContent = n + ' × ' + b + ' = ?';
     if (ttsQuestions()) say('What is ' + numToWords(n) + ' times ' + numToWords(b) + '?');
     const set = [zap.ans];
-    [n * (b + 1), n * (b - 1), (n + 1) * b, (n - 1) * b, zap.ans + b].forEach(d => {
-      if (d >= 1 && d <= 120 && !set.includes(d)) set.push(d);
+    // near-miss decoys: off-by-one-table, off-by-one-step, digit-swap
+    const swap = +String(zap.ans).split('').reverse().join('');
+    [n * (b + 1), n * (b - 1), (n + 1) * b, (n - 1) * b, zap.ans + b, zap.ans - n,
+     zap.ans + 1, zap.ans - 1, swap].forEach(d => {
+      if (d >= 2 && d <= 220 && d !== zap.ans && !set.includes(d)) set.push(d);
     });
-    zap.cands = set.slice(0, 4);
+    zap.cands = set.slice(0, 6);
   }
   patches.forEach(hidePop);
 }
@@ -2308,6 +3395,7 @@ function hidePop(p){
   if (!p.pop) return;
   const el = p.pop;
   p.pop = null;
+  p.popVal = null;
   el.classList.remove('up');
   setTimeout(() => el.remove(), 300);
 }
@@ -2317,11 +3405,17 @@ function popOne(){
   const empty = patches.filter(p => !p.pop);
   if (!empty.length) return;
   const p = empty[rnd(empty.length)];
+  // the answer is on screen roughly 1 pop in 3, guaranteed at least every 4th
+  const answerShowing = patches.some(pp => pp.pop && pp.popVal === zap.ans);
   let n;
-  if (zap.sinceAns >= 2){ n = zap.ans; }
-  else if (Math.random() < 0.5){ n = zap.ans; }
-  else { n = zap.cands[rnd(zap.cands.length)]; }
+  if (zap.sinceAns >= 3 && !answerShowing){ n = zap.ans; }
+  else if (!answerShowing && Math.random() < 0.3){ n = zap.ans; }
+  else {
+    const decoys = zap.cands.filter(v => v !== zap.ans);
+    n = decoys[rnd(decoys.length)];
+  }
   zap.sinceAns = (n === zap.ans) ? 0 : zap.sinceAns + 1;
+  p.popVal = n;
   const el = document.createElement('button');
   el.className = 'wildpk';
   el.innerHTML =
@@ -2418,8 +3512,14 @@ function startZap(){
   });
   document.getElementById('zapSpeech').textContent = 'Tap the Pokémon holding the right answer!';
   zapQuestion();
-  zap.popTimer = setInterval(popOne, Math.round(P().pop / 2.6));
+  // faster spawns, and a second Pokémon often pops moments later —
+  // several are up at once, so she has to scan and compare
+  zap.popTimer = setInterval(() => {
+    popOne();
+    if (Math.random() < 0.55) zap.tos.push(setTimeout(popOne, 300 + rnd(500)));
+  }, Math.round(P().pop / 3.4));
   popOne();
+  zap.tos.push(setTimeout(popOne, 500));
 }
 function stopZap(){
   clearInterval(zap.popTimer); zap.popTimer = null;
@@ -2450,12 +3550,13 @@ function raceConfig(wins){
   else if (wins < 4){ step = 100; start = (1 + rnd(85)) * 100; }
   else if (wins < 6){ step = pick([6, 7]); start = step; }
   else if (wins < 8){ step = pick([8, 9]); start = step; }
-  else { step = pick([6, 7, 8, 9, 25, 50]); start = step * (1 + rnd(3)); desc = wins % 2 === 0; }
+  else if (wins < 12){ step = pick([6, 7, 8, 9, 25, 50]); start = step * (1 + rnd(3)); desc = wins % 2 === 0; }
+  else { step = pick([11, 12, 15, 25, 40, 50]); start = step * (1 + rnd(4)) + pick([0, 1000, 2000]); desc = wins % 2 === 0; }
   const len = 10;
   let seq = Array.from({length: len}, (_, i) => start + step * i);
   if (desc) seq = seq.reverse();
   label = 'Count ' + (desc ? 'DOWN ' : '') + 'in ' + step + 's!';
-  const secs = Math.max(45, 80 - wins * 3);
+  const secs = Math.max(40, 80 - wins * 3);
   return { seq, label, secs };
 }
 
@@ -2694,7 +3795,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['hq_stars','hq_prog','hq_caught','hq_pbuddy','hq_ball','hq_sound','hq_name','hq_wv','hq_voice','hq_vwho','hq_tts','hq_caps','hq_flu'];
+  let taps = [], KEYS = ['hq_stars','hq_prog','hq_caught','hq_pbuddy','hq_ball','hq_sound','hq_name','hq_wv','hq_voice','hq_vwho','hq_tts','hq_input','hq_caps','hq_flu'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -2718,7 +3819,8 @@ document.addEventListener('visibilitychange', () => {
     panel.style.display = 'flex';
   }
   const CAP_MODES = [['num','Numbers'], ['addsub','Add & subtract'], ['muldiv','Multiply & divide'],
-    ['frac','Fractions'], ['money','Money'], ['time','Time & measure'], ['zap','Wild Catch']];
+    ['frac','Fractions'], ['money','Money'], ['time','Time & measure'], ['dec','Decimals'],
+    ['geo','Shapes & angles'], ['data','Graphs & data'], ['zap','Wild Catch']];
   function renderVoice(){
     document.getElementById('wvOn').classList.toggle('on', wrongVoice);
     document.getElementById('wvOff').classList.toggle('on', !wrongVoice);
@@ -2728,10 +3830,14 @@ document.addEventListener('visibilitychange', () => {
     document.getElementById('vwBoth').classList.toggle('on', voiceWho === 'both');
     document.getElementById('vwDad').classList.toggle('on', voiceWho === 'dad');
     document.getElementById('vwMum').classList.toggle('on', voiceWho === 'mum');
+    document.getElementById('inWrite').classList.toggle('on', inputMode === 'write');
+    document.getElementById('inPad').classList.toggle('on', inputMode === 'pad');
     document.getElementById('rvFull').classList.toggle('on', ttsMode === 'full');
     document.getElementById('rvFacts').classList.toggle('on', ttsMode === 'facts');
     document.getElementById('rvOff').classList.toggle('on', ttsMode === 'off');
   }
+  document.getElementById('inWrite').addEventListener('click', () => { setInputMode('write'); renderVoice(); });
+  document.getElementById('inPad').addEventListener('click', () => { setInputMode('pad'); renderVoice(); });
   [['rvFull','full'], ['rvFacts','facts'], ['rvOff','off']].forEach(([id, m]) => {
     document.getElementById(id).addEventListener('click', () => {
       ttsMode = m; store.set('hq_tts', m); schedulePush(); renderVoice();
@@ -2781,7 +3887,7 @@ document.addEventListener('visibilitychange', () => {
       const nm = document.createElement('span');
       nm.textContent = label;
       row.appendChild(nm);
-      [['Auto', 0], ['Lv 1', 1], ['Lv 2', 2], ['Lv 3', 3]].forEach(([txt, val]) => {
+      [['Auto', 0], ['Lv 1', 1], ['Lv 2', 2], ['Lv 3', 3], ['Lv 4', 4]].forEach(([txt, val]) => {
         const b = document.createElement('button');
         b.textContent = txt;
         if ((capOverride[m] || 0) === val) b.classList.add('on');
