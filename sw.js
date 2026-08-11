@@ -1,5 +1,6 @@
 // PokéMath Quest (Hana · P3) — offline cache
-const CACHE = 'pokequest-hana-v1';
+// Keep this in step with APP_VERSION in index.html: 'pokequest-hana-<version>'
+const CACHE = 'pokequest-hana-h3';
 const ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
 const CORE = ['./', './index.html', './manifest.json', './hana-voice.json', './icon-192.png', './icon-512.png'];
 

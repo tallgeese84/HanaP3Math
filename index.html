@@ -690,7 +690,7 @@
     <div id="buddyBox"></div>
     <h1>PokéMath Quest</h1>
     <p class="sub">Primary 3 maths — catch them all, Hana!</p>
-    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px">build h1</div>
+    <div style="text-align:center;font-size:11px;color:#20486E;opacity:.8;margin:-8px 0 8px" id="buildTag"></div>
     <div class="modes">
       <button class="mode count" data-go="num"><span class="big"><img class="mico" data-mon="65" alt=""><span class="micoalt">🔢</span></span>Numbers<br>to 10 000</button>
       <button class="mode add" data-go="addsub"><span class="big"><img class="mico" data-mon="82" alt=""><span class="micoalt">➕</span></span>Add &amp;<br>Subtract</button>
@@ -841,6 +841,13 @@
 <script>
 'use strict';
 /* ============================================================
+   APP_VERSION — bump on EVERY fix or change, and:
+     1. set sw.js CACHE to 'pokequest-hana-<version>' to match
+     2. add a line to CHANGELOG.md saying what changed
+   The version shows under the title and in ☁️ → Check build.
+   ============================================================ */
+const APP_VERSION = 'h3';
+/* ============================================================
    PokéMath Quest — Hana · Singapore MOE Primary 3 maths
    Numbers to 10 000 · Add & Subtract · Multiply & Divide
    Fractions · Money · Time & Measure
@@ -944,6 +951,11 @@ function say(text, interrupt){
 }
 function pumpSpeech(){
   if (speaking || !speechQ.length) return;
+  // never talk over Dad's recorded voice — hold the queue until the clip ends
+  if (typeof voiceBusy === 'function' && voiceBusy()){
+    setTimeout(pumpSpeech, 180);
+    return;
+  }
   const text = speechQ.shift();
   speaking = true;
   try{
@@ -969,7 +981,9 @@ function shutUp(){
   clearTimeout(speechTimer);
   try{ speechSynthesis.cancel(); }catch(e){}
 }
-function speechIdle(){ return !speaking && !speechQ.length; }
+function speechIdle(){
+  return !speaking && !speechQ.length && !(typeof voiceBusy === 'function' && voiceBusy());
+}
 function speakNumber(n){ say(numToWords(n)); }
 
 /* ---------- Hana's recorded voice pack ----------
@@ -1000,7 +1014,8 @@ function b64Bytes(b64){
   for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
   return u.buffer;
 }
-let voiceNode = null;
+let voiceNode = null, voiceEndsAt = 0;
+function voiceBusy(){ return voiceNode !== null && Date.now() < voiceEndsAt; }
 function playVoice(cat){
   return new Promise(resolve => {
     if (!voiceOn || !soundOn || !voicePack){ resolve(0); return; }
@@ -1014,13 +1029,15 @@ function playVoice(cat){
     const go = buf => {
       try{
         if (voiceNode){ try{ voiceNode.stop(); }catch(e){} }
-        shutUp();                              // Dad's voice takes priority over the robot
+        shutUp();                              // Dad's voice silences the robot immediately
         const src = ac.createBufferSource();
         src.buffer = buf;
         const g = ac.createGain(); g.gain.value = 1.0;
         src.connect(g); g.connect(ac.destination);
         src.start();
         voiceNode = src;
+        voiceEndsAt = Date.now() + buf.duration * 1000 + 150;   // small breath after the clip
+        src.onended = () => { if (voiceNode === src) voiceNode = null; };
         resolve(buf.duration);
       }catch(e){ resolve(0); }
     };
@@ -1032,11 +1049,13 @@ function playVoice(cat){
     }catch(e){ resolve(0); }
   });
 }
-/* Dad's clip first, then the robot reads the math fact. */
+/* Dad's clip first, then the robot reads the math fact.
+   say() queues behind the clip automatically (pumpSpeech waits on voiceBusy),
+   so nothing here can overlap. */
 function voiceThen(cat, fallbackLine, thenLine){
   playVoice(cat).then(d => {
-    if (d){ if (thenLine) setTimeout(() => say(thenLine), d * 1000 + 200); }
-    else { say(fallbackLine || thenLine); if (fallbackLine && thenLine) say(thenLine); }
+    if (d){ if (thenLine) say(thenLine); }
+    else { if (fallbackLine) say(fallbackLine); if (thenLine && thenLine !== fallbackLine) say(thenLine); }
   });
 }
 let saidHello = false;
@@ -2180,7 +2199,7 @@ function resolveAnswer(correct, btn){
       const blank = document.getElementById('blank');
       if (blank) blank.innerHTML = at;
       sp.innerHTML = 'The answer is <b>' + at + '</b> — next one!';
-      playVoice('hint').then(d => setTimeout(() => say(q.fact), d ? d * 1000 + 200 : 0));
+      playVoice('hint').then(() => say(q.fact));
       setTimeout(function waitQuiet(){
         if (!speechIdle() && MODES.includes(mode)){ setTimeout(waitQuiet, 250); return; }
         if (MODES.includes(mode)) newQuestion();
@@ -2745,7 +2764,7 @@ document.addEventListener('visibilitychange', () => {
       ['voice pack', !!voicePack]
     ];
     document.getElementById('ppVer').textContent =
-      'build h1 — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
+      'build ' + APP_VERSION + ' — ' + checks.map(([n, ok]) => (ok ? '✓ ' : '✗ ') + n).join(', ');
     showPraise(praiseLine(true));
     say(praiseLine(true));
   });
@@ -2807,6 +2826,7 @@ if ('serviceWorker' in navigator){
     bg.appendChild(st);
   }
 })();
+document.getElementById('buildTag').textContent = 'build ' + APP_VERSION;
 loadStars();
 </script>
 </body>

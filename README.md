@@ -47,5 +47,13 @@ The grown-ups panel accepts the same Firebase database URL and family code as
 the other family apps; Hana's progress is stored under its own
 `pokequest-hana` slot so nothing collides.
 
-To ship an update, bump `CACHE = 'pokequest-hana-v1'` in `sw.js` (v2, v3, ...)
-so installed tablets pick up the new version.
+## Shipping updates
+Every fix gets a version number (h1, h2, h3, …). To ship one:
+1. Bump `APP_VERSION` in `index.html`.
+2. Set `CACHE = 'pokequest-hana-<same version>'` in `sw.js` so installed
+   tablets pick up the new files.
+3. Add a line to `CHANGELOG.md` saying what changed.
+
+The running build shows under the home-screen title (e.g. "build h3") and in
+the grown-ups panel via 🔎 Check build — so you can always tell whether a
+tablet has updated yet.
