@@ -5,6 +5,8 @@ in the grown-ups panel (☁️ → 🔎 Check build).
 
 | Build | Date | What changed |
 |-------|------------|--------------|
+| h7 | 2026-08-11 | Voice pack now has Mum AND Dad (62 clips, re-cleaned: high-pass, silence-trimmed, loudness-matched). New "Who speaks" setting in the grown-ups panel: Both (random mix) / Dad / Mum. |
+| h6 | 2026-08-11 | Grown-ups (☁️) panel is now scrollable — it had grown taller than the screen and the top/bottom were cut off with no way to scroll. |
 | h5 | 2026-08-11 | Hana's avatar (from the Starwing artwork) cut out from its background and added to the home screen beside her Pokémon buddy; cached offline. |
 | h4 | 2026-08-11 | Hana's own app icon added (gold sparkle Pokéball, icon-192/512.png) so the two apps look different on the tablet. |
 | h3 | 2026-08-11 | Version number centralised (`APP_VERSION` in index.html + matching sw.js cache name); changelog added. |

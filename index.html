@@ -328,13 +328,15 @@
   }
   #rightPraise .rpsign{ font-size:38px; display:inline-block; animation:hintpop .6s ease; }
   #parentPanel{
-    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center;
     background:rgba(24,26,64,.6); z-index:80; padding:16px;
+    overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
   }
   #parentPanel .ppbox{
     background:linear-gradient(180deg,#FFFDF4,#FBF3DF); border:5px solid var(--ink);
     border-radius:28px; padding:18px; max-width:420px; width:100%;
     box-shadow:0 10px 0 rgba(30,32,70,.55);
+    margin:auto;                       /* centers when short, scrolls from the top when tall */
   }
   #parentPanel textarea{
     width:100%; font-family:monospace; font-size:12px; border:3px solid var(--ink);
@@ -828,6 +830,12 @@
       <button id="vpOn">On</button>
       <button id="vpOff">Off</button>
     </div>
+    <div class="caprow">
+      <span>Who speaks</span>
+      <button id="vwBoth">Both</button>
+      <button id="vwDad">Dad</button>
+      <button id="vwMum">Mum</button>
+    </div>
     <div class="pprow" id="vpTests" style="flex-wrap:wrap"></div>
     <hr style="border:none;border-top:3px dashed #E4C05A;margin:10px 0">
     <div style="font-weight:bold;font-size:18px;margin-bottom:4px">☁️ Sync across tablets</div>
@@ -854,7 +862,7 @@
      2. add a line to CHANGELOG.md saying what changed
    The version shows under the title and in ☁️ → Check build.
    ============================================================ */
-const APP_VERSION = 'h5';
+const APP_VERSION = 'h7';
 /* ============================================================
    PokéMath Quest — Hana · Singapore MOE Primary 3 maths
    Numbers to 10 000 · Add & Subtract · Multiply & Divide
@@ -1000,18 +1008,22 @@ function speakNumber(n){ say(numToWords(n)); }
    retry (wrong answer) · hint · streak · sky (big celebrations) · bye.
    playVoice() resolves with the clip length in seconds (0 = nothing played),
    so callers can queue the spoken math fact right after Dad's line. */
-let voicePack = null, voiceOn = true, voiceLastKey = {};
+let voicePack = null, voiceOn = true, voiceWho = 'both', voiceLastKey = {};
 const voiceBufs = {}, voiceCats = {};
 fetch('./hana-voice.json')
   .then(r => r.json())
   .then(j => {
     voicePack = j;
+    const who = new Set();
     Object.keys(j.clips || {}).forEach(k => {
       const cat = k.split('-')[0];
       (voiceCats[cat] = voiceCats[cat] || []).push(k);
+      const suffix = k.split('::')[1];
+      if (suffix) who.add(suffix);
     });
     const st = document.getElementById('vpStatus');
-    if (st) st.textContent = '(' + Object.keys(j.clips || {}).length + ' clips — ' + (j.child || 'Hana') + ')';
+    if (st) st.textContent = '(' + Object.keys(j.clips || {}).length + ' clips — ' +
+      (who.size ? [...who].map(w => w === 'mum' ? 'Mum' : w === 'dad' ? 'Dad' : w).join(' & ') : (j.child || 'Hana')) + ')';
   })
   .catch(() => {
     const st = document.getElementById('vpStatus');
@@ -1028,8 +1040,13 @@ function playVoice(cat){
   return new Promise(resolve => {
     if (!voiceOn || !soundOn || !voicePack){ resolve(0); return; }
     const ac = audio(); if (!ac){ resolve(0); return; }
-    const keys = voiceCats[cat];
+    let keys = voiceCats[cat];
     if (!keys || !keys.length){ resolve(0); return; }
+    // honour the Who-speaks setting; fall back to everyone if a voice is missing
+    if (voiceWho !== 'both'){
+      const mine = keys.filter(k => k.endsWith('::' + voiceWho));
+      if (mine.length) keys = mine;
+    }
     // avoid saying the same line twice in a row
     let k = keys[rnd(keys.length)];
     if (keys.length > 1 && k === voiceLastKey[cat]) k = keys[(keys.indexOf(k) + 1) % keys.length];
@@ -1103,6 +1120,8 @@ async function loadStars(){
   if (wv === 'off') wrongVoice = false;
   const vp = await store.get('hq_voice');
   if (vp === 'off') voiceOn = false;
+  const vw = await store.get('hq_vwho');
+  if (vw === 'dad' || vw === 'mum') voiceWho = vw;
   try{
     const st = JSON.parse(await store.get('hq_streak') || '{}');
     streak = st.s || 0; bestStreak = st.b || 0;
@@ -2657,7 +2676,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- parent backup panel (triple-tap the title) ---------- */
 (function parentPanel(){
   const panel = document.getElementById('parentPanel');
-  let taps = [], KEYS = ['hq_stars','hq_prog','hq_caught','hq_pbuddy','hq_ball','hq_sound','hq_name','hq_wv','hq_voice','hq_caps','hq_flu'];
+  let taps = [], KEYS = ['hq_stars','hq_prog','hq_caught','hq_pbuddy','hq_ball','hq_sound','hq_name','hq_wv','hq_voice','hq_vwho','hq_caps','hq_flu'];
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
@@ -2688,12 +2707,21 @@ document.addEventListener('visibilitychange', () => {
     document.getElementById('wvName').value = childName;
     document.getElementById('vpOn').classList.toggle('on', voiceOn);
     document.getElementById('vpOff').classList.toggle('on', !voiceOn);
+    document.getElementById('vwBoth').classList.toggle('on', voiceWho === 'both');
+    document.getElementById('vwDad').classList.toggle('on', voiceWho === 'dad');
+    document.getElementById('vwMum').classList.toggle('on', voiceWho === 'mum');
   }
   document.getElementById('vpOn').addEventListener('click', () => {
     voiceOn = true; store.set('hq_voice', 'on'); schedulePush(); renderVoice(); playVoice('hello');
   });
   document.getElementById('vpOff').addEventListener('click', () => {
     voiceOn = false; store.set('hq_voice', 'off'); schedulePush(); renderVoice();
+  });
+  [['vwBoth','both'], ['vwDad','dad'], ['vwMum','mum']].forEach(([id, who]) => {
+    document.getElementById(id).addEventListener('click', () => {
+      voiceWho = who; store.set('hq_vwho', who); schedulePush(); renderVoice();
+      audio(); playVoice('hello');
+    });
   });
   (function buildVpTests(){
     const box = document.getElementById('vpTests');
