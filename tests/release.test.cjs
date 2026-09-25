@@ -10,11 +10,11 @@ test('HTML scripts parse, element IDs are unique, release versions match',()=>{
  for(const [,source]of scripts)new vm.Script(source);
  const ids=[...html.split('<script>')[0].matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
  assert.equal(new Set(ids).size,ids.length);
- assert.match(html,/APP_VERSION = 'h12'/);assert.match(read('sw.js'),/pokequest-hana-h12/);
- for(const file of ['studio.js','studio.css','learning.js','curriculum.js'])assert.ok(read('sw.js').includes(file+'?v=h12'));
+ assert.match(html,/APP_VERSION = 'h13'/);assert.match(read('sw.js'),/pokequest-hana-h13/);
+ for(const file of ['studio.js','studio.css','learning.js','curriculum.js','lessons.js'])assert.ok(read('sw.js').includes(file+'?v=h13'));
 });
 test('service-worker activation only deletes Hana caches',async()=>{
- const callbacks={},deleted=[];const ctx={self:{addEventListener:(name,fn)=>callbacks[name]=fn,clients:{claim:async()=>{}}},caches:{keys:async()=>['pokequest-hana-h11','pokequest-hana-h12','mochi-v5','pokemath-v64'],delete:async k=>deleted.push(k)}};
+ const callbacks={},deleted=[];const ctx={self:{addEventListener:(name,fn)=>callbacks[name]=fn,clients:{claim:async()=>{}}},caches:{keys:async()=>['pokequest-hana-h11','pokequest-hana-h13','mochi-v5','pokemath-v64'],delete:async k=>deleted.push(k)}};
  vm.runInNewContext(read('sw.js'),ctx);let promise;callbacks.activate({waitUntil:p=>promise=p});await promise;
  assert.deepEqual(deleted,['pokequest-hana-h11']);
 });

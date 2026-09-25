@@ -46,3 +46,17 @@ Reviewed 25 September 2026 against Singapore MOE’s **2021 primary mathematics 
 - Actual browser tests at desktop, 800 px tablet and 390 px phone widths; six-question flow, saved work, year selection and input switching.
 - WAV decoding/playback for both Mum and Dad; offline replay; exact SHA-256 match of all 62 original clips.
 - Backup and cloud-merge checks, offline shell checks and sibling-cache preservation.
+
+
+## h13 teaching and adaptation review
+
+The h12 app offered hints and practice but no introductory lessons. Its scheduler recorded difficulty levels even in families whose questions did not change with the level. h13 adds:
+
+- An original introduction, diagram, worked example and formative check for all 43 skills, followed by practice. Device read-aloud is optional; existing Mum/Dad recordings continue to provide encouragement.
+- One daily focus skill with repeated opportunities to apply the idea, plus up to two familiar review skills. The diagnostic remains separate. A focus selected from the map always opens its lesson.
+- Three levels in every automatically marked family. Examples: direct reading → difference → total for graphs; whole-unit conversion → compound conversion → reverse conversion for measures; identifying solids → recognising nets → reasoning about faces for solids. Purely larger-number levels are used where the calculation itself is the skill.
+- A rise after three independent answers at the attempted level. Two consecutive supported answers, a revealed answer or two incorrect attempts on one question lower the next level. Repeated difficulty opens the same skill’s worked explanation again. Daily scheduling can select a prerequisite within the chosen year; it never changes school year automatically.
+- Learning checks stored separately from practice. A missed introductory check selects level 1. Replaying a lesson midway through a question marks that answer as supported and preserves the draft. Drawing still needs human review.
+- Lesson state and completion in offline storage and backup; completion merges across devices without counting as mastery. Different-day mastery evidence uses Singapore calendar days.
+
+Validation: all 20 Node tests pass, including 38,700 generated specifications, every skill’s lesson and both tier boundaries. Browser tests cover all 43 lessons at phone width, lesson and question resume, level increases, missed-check scaffolding, automatic recaps, supported replay, recorded Mum/Dad audio, read-aloud routing/mute, offline core and backup. Device TTS pronunciation and the educational effectiveness of the thresholds are not established by these tests. These are simple, transparent adaptation rules, not a validated learner model or a replacement for classroom teaching.

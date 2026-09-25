@@ -1,7 +1,7 @@
 // Atomic app-shell cache. Family audio is core; artwork is cached on demand.
-const CACHE = 'pokequest-hana-h12';
+const CACHE = 'pokequest-hana-h13';
 const PREFIX = 'pokequest-hana-';
-const CORE = ['./','./index.html','./manifest.json','./hana-voice.json','./hana-avatar.png','./digit-net.json','./icon-192.png','./icon-512.png','./studio.css?v=h12','./curriculum.js?v=h12','./learning.js?v=h12','./studio.js?v=h12','./art/1.png','./art/4.png','./art/7.png','./art/25.png','./art/133.png'];
+const CORE = ['./','./index.html','./manifest.json','./hana-voice.json','./hana-avatar.png','./digit-net.json','./icon-192.png','./icon-512.png','./studio.css?v=h13','./curriculum.js?v=h13','./learning.js?v=h13','./lessons.js?v=h13','./studio.js?v=h13','./art/1.png','./art/4.png','./art/7.png','./art/25.png','./art/133.png'];
 self.addEventListener('install',event=>{
  event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(CORE);await self.skipWaiting();})());
 });

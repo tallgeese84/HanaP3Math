@@ -1,6 +1,6 @@
 # Hana’s Maths Studio — Singapore P3 & P4
 
-A personal maths app for Hana. **Build h12** brings Euna’s Mochi-style workspace to Hana’s existing PokéMath app: violet colours, one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
+A personal maths app for Hana. **Build h13** adds visual mini-lessons and answer-driven adaptive practice to Euna’s Mochi-style workspace in Hana’s existing PokéMath app: violet colours, one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
 
 [Open the app](https://tallgeese84.github.io/HanaP3Math/)
 
@@ -9,11 +9,13 @@ A personal maths app for Hana. **Build h12** brings Euna’s Mochi-style workspa
 ## Learning
 
 - Choose **Primary 3** or **Primary 4** explicitly. Practice never promotes a child into a different school year automatically.
-- **Let’s practise** gives six questions, prioritising due review and unexplored skills. **Find my starting point** samples new skills across successive sittings. This is formative practice, not a standardised placement test.
+- **Learn & practise** starts with a short lesson: **The idea → Watch me → Your turn**. Each of the 43 mapped skills has an explanation, diagram, worked steps and a learning check, including the three drawing groups. These are introductory mini-lessons, not full classroom videos or a complete textbook.
+- Daily practice focuses on one skill for four to six questions, then reviews up to two previously attempted skills. Unexplored skills and due review are prioritised; repeated difficulty can schedule an in-year prerequisite. **Find my starting point** remains a separate six-skill diagnostic without compulsory lessons; it is formative, not a standardised placement test.
 - **My map** offers 43 skills: 18 in P3 and 25 in P4. Forty support automatic answer checking; three construction groups save work for a grown-up’s review.
-- Four recent questions with at least three independent answers allow a higher tier where the question family supports larger numbers. There is no response-speed requirement. Topics with a fixed concept use varied examples within the same scope.
-- “Secure” requires at least six recent observations, five independent answers, three independent answers at tier 2 or above, and evidence on two different days. It is a practice indicator, not certification that every syllabus objective is mastered.
-- Hints, retries and revealed solutions are recorded separately. Supported success earns encouragement and rewards, but does not count as independent evidence. Previous stars/counters are not converted into mastery.
+- Three consecutive independent answers at the same level raise the next question one level, up to level 3. Two consecutive supported/unsuccessful answers lower it one level. A revealed answer or two wrong attempts on one question also lowers it. There is no speed requirement. All 40 automatically checked skills change their numbers, representation or task at each level boundary.
+- Repeated difficulty opens a recap before the next practice question. A missed introductory check starts practice at level 1. **Review the lesson** preserves the current question and draft, but the subsequent answer is marked as supported. Lesson checks earn no stars and create no mastery evidence. Drawing tasks remain human reviewed.
+- “Secure” requires at least six recent observations, five independent answers, three independent answers at tier 2 or above, and evidence on two different Singapore calendar days. It is a practice indicator, not certification that every syllabus objective is mastered.
+- Hints, retries, lesson replays and revealed solutions are recorded separately. Supported success earns encouragement and rewards, but does not count as independent evidence. Previous stars/counters are not converted into mastery.
 - Think: **Understand → Connect → Solve → Check**. Typed notes and stylus drawings remain with the question, survive closing panels and are included in backups. Paper/ruler/protractor work needs a grown-up’s check.
 - Select **Next question** when ready; solutions no longer disappear on a timer.
 
@@ -21,13 +23,13 @@ The curriculum uses the [Singapore MOE 2021 Mathematics Syllabus, October 2025 u
 
 ## Family audio
 
-`hana-voice.json` is unchanged: **62 recordings, Mum and Dad**, with Both / Dad / Mum selection and the existing greeting, praise, retry, hint, streak, catch and goodbye categories. No paid voice service or voice cloning is used. Device speech reads new question text when enabled. Recorded clips and speech use the existing sequential audio pipeline; muting now also cancels active/pending recorded playback.
+`hana-voice.json` is unchanged: **62 recordings, Mum and Dad**, with Both / Dad / Mum selection and the existing greeting, praise, retry, hint, streak, catch and goodbye categories. No paid voice service or voice cloning is used. Device speech reads question text and lesson pages when enabled. Tap **Read this aloud** on a lesson. Availability and pronunciation depend on the device’s installed speech voices; offline recordings do not require those voices. Recorded clips and speech use the existing sequential audio pipeline; muting now also cancels active/pending recorded playback.
 
 More → **Mum & Dad’s voices, backup & sync** opens the original controls. TTS choices remain All / Answers only / Off. TTS Off does not disable the family clips.
 
 ## Progress, backup and offline use
 
-Existing `hq_*` keys and the Firebase `pokequest-hana` slot remain. New per-question evidence is stored in `hq_learning`; the unfinished session in `hq_session`; selected school year in `hq_year`. Backup codes include these keys and existing rewards/settings. Cloud sync merges evidence by stable event ID; unfinished work stays local to each device. Avoid editing the same backup on old versions: old clients do not understand the new evidence fields.
+Existing `hq_*` keys and the Firebase `pokequest-hana` slot remain. New per-question evidence and lesson completion are stored in `hq_learning`; the unfinished question or lesson slide in `hq_session`; selected school year in `hq_year`. Backup codes include these keys and existing rewards/settings. Cloud sync merges evidence by stable event ID and lesson checks by timestamp; unfinished work stays local to each device. Avoid editing the same backup on old versions: old clients do not understand the new evidence fields.
 
 Open online once to cache the app, recordings, digit model and five starter artworks. The first catch (Pikachu) and core practice work offline. Additional Pokémon artwork is cached when fetched successfully online. The service worker replaces only Hana’s own caches, preserving other family apps on the same origin.
 
@@ -41,7 +43,7 @@ No build step or runtime dependency is required; serve the repository as a stati
 npm test
 ```
 
-The Node suite checks 38,700 generated questions, arithmetic/fraction limits, answer uniqueness, grade boundaries, diagnostic coverage, mastery/review rules, evidence merging, voice-file integrity and cache isolation.
+The 20-test Node suite checks 38,700 generated questions, arithmetic/fraction limits, unique answers, all lesson/check definitions, real content changes at both difficulty boundaries for every automatically marked skill, rise/fall rules, year boundaries, diagnostics, mastery/review, evidence/lesson merging, voice-file integrity and cache isolation.
 
 Browser regression tests use Playwright:
 
@@ -51,8 +53,8 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-`tests/browser.cjs` starts its own temporary HTTP server. It exercises the real app, preserved progress, hints/retries, six-question completion, resume/working notes, input switching, desktop/tablet/phone sizing, both recorded voices, offline audio and backup contents. `PLAYWRIGHT_MODULE` and `CHROMIUM_EXECUTABLE` can point to an existing runtime installation. Tests use isolated browser storage and never access a real family Firebase account.
+`tests/browser.cjs` starts its own temporary HTTP server. It exercises all 43 lesson layouts at phone width, lesson reload/resume and learning checks, six-question completion with a level increase, missed-check support, reteaching, replay without losing drafts, preserved progress, working notes, input switching, both recorded voices, offline audio and backup contents. A speech adapter verifies read-aloud routing and mute; audible OS text-to-speech still needs a check on the target tablet. `PLAYWRIGHT_MODULE` and `CHROMIUM_EXECUTABLE` can point to an existing runtime installation. Tests use isolated browser storage and never access a real family Firebase account.
 
 ## Release
 
-Bump `APP_VERSION` in `index.html`, the `h12` asset query strings and the cache name/core entries in `sw.js` together. Run the tests, update `CHANGELOG.md`, then publish via the repository’s existing GitHub Pages setup.
+Bump `APP_VERSION` in `index.html`, the `h13` asset query strings and the cache name/core entries in `sw.js` together. Run the tests, update `CHANGELOG.md`, then publish via the repository’s existing GitHub Pages setup.
