@@ -10,13 +10,13 @@ test('HTML scripts parse, element IDs are unique, release versions match',()=>{
  for(const [,source]of scripts)new vm.Script(source);
  const ids=[...html.split('<script>')[0].matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
  assert.equal(new Set(ids).size,ids.length);
- assert.match(html,/APP_VERSION = 'h13'/);assert.match(read('sw.js'),/pokequest-hana-h13/);
- for(const file of ['studio.js','studio.css','learning.js','curriculum.js','lessons.js'])assert.ok(read('sw.js').includes(file+'?v=h13'));
+ assert.match(html,/APP_VERSION = 'h14'/);assert.match(read('sw.js'),/pokequest-hana-h14/);
+ for(const file of ['studio.js','studio.css','learning.js','curriculum.js','lessons.js'])assert.ok(read('sw.js').includes(file+'?v=h14'));
 });
 test('service-worker activation only deletes Hana caches',async()=>{
- const callbacks={},deleted=[];const ctx={self:{addEventListener:(name,fn)=>callbacks[name]=fn,clients:{claim:async()=>{}}},caches:{keys:async()=>['pokequest-hana-h11','pokequest-hana-h13','mochi-v5','pokemath-v64'],delete:async k=>deleted.push(k)}};
+ const callbacks={},deleted=[];const ctx={self:{addEventListener:(name,fn)=>callbacks[name]=fn,clients:{claim:async()=>{}}},caches:{keys:async()=>['pokequest-hana-h11','pokequest-hana-h13','pokequest-hana-h14','mochi-v5','pokemath-v64'],delete:async k=>deleted.push(k)}};
  vm.runInNewContext(read('sw.js'),ctx);let promise;callbacks.activate({waitUntil:p=>promise=p});await promise;
- assert.deepEqual(deleted,['pokequest-hana-h11']);
+ assert.deepEqual(deleted,['pokequest-hana-h11','pokequest-hana-h13']);
 });
 test('service-worker core contains local modules, family audio and starter artwork',()=>{
  const sw=read('sw.js');assert.match(sw,/\.\/hana-voice.json/);assert.match(sw,/\.\/digit-net.json/);assert.match(sw,/\.\/art\/25.png/);

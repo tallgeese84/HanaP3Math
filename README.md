@@ -1,6 +1,6 @@
 # Hana’s Maths Studio — Singapore P3 & P4
 
-A personal maths app for Hana. **Build h13** adds visual mini-lessons and answer-driven adaptive practice to Euna’s Mochi-style workspace in Hana’s existing PokéMath app: violet colours, one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
+A personal maths app for Hana. **Build h14** fixes answer buttons remaining locked after keypad/stylus questions. It retains Euna’s Mochi-style layout, visual mini-lessons and adaptive practice, with one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
 
 [Open the app](https://tallgeese84.github.io/HanaP3Math/)
 
@@ -51,10 +51,13 @@ Browser regression tests use Playwright:
 npm install --no-save playwright
 npx playwright install chromium
 npm run test:browser
+npm run test:answers
 ```
 
 `tests/browser.cjs` starts its own temporary HTTP server. It exercises all 43 lesson layouts at phone width, lesson reload/resume and learning checks, six-question completion with a level increase, missed-check support, reteaching, replay without losing drafts, preserved progress, working notes, input switching, both recorded voices, offline audio and backup contents. A speech adapter verifies read-aloud routing and mute; audible OS text-to-speech still needs a check on the target tablet. `PLAYWRIGHT_MODULE` and `CHROMIUM_EXECUTABLE` can point to an existing runtime installation. Tests use isolated browser storage and never access a real family Firebase account.
 
+`tests/answer-locks.cjs` reproduces the h13 stale-lock failure and checks real touch input through keypad, stylus and keyboard transitions, wrong-answer retries, topic changes, lesson replay and resume. Unanswered choices remain tappable; completed questions cannot award twice.
+
 ## Release
 
-Bump `APP_VERSION` in `index.html`, the `h13` asset query strings and the cache name/core entries in `sw.js` together. Run the tests, update `CHANGELOG.md`, then publish via the repository’s existing GitHub Pages setup.
+Bump `APP_VERSION` in `index.html`, the `h14` asset query strings and the cache name/core entries in `sw.js` together. Run the tests, update `CHANGELOG.md`, then publish via the repository’s existing GitHub Pages setup.

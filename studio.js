@@ -139,6 +139,9 @@ function answerUI(){
  const c=current();if(!c)return;
  const oldSaving=savingDraft;savingDraft=true;
  try{
+ // The shared containers outlive each question. Reconcile both the input
+ // guard and visual/pointer locks for every answer type, including choices.
+ padLocked=!!c.done;lockPads(padLocked);
  for(const id of ['kwrap','wwrap','pad'])$(id).style.display='none';
  $('answerForm').hidden=true;$('manualAnswer').hidden=true;$('inputControls').hidden=q.kind!=='key';
  if(q.kind==='manual'){
@@ -159,7 +162,6 @@ function answerUI(){
    // wpClear in the legacy renderer clears q.entry; restore the recognised draft.
    q.entry=c.entry||'';renderEntry();
   }
-  lockPads(c.done);
  }
  for(const [id,m] of [['useKeyboard','keyboard'],['useKeypad','pad'],['useWriting','write']]){
   $(id).setAttribute('aria-pressed',String(method===m));$(id).disabled=m==='write'&&!NET;
