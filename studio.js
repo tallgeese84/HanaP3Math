@@ -2,7 +2,7 @@
  * hq_* storage remain in index.html. Never derive mastery from legacy stars. */
 (function(){
 'use strict';
-const C=HanaCurriculum,L=HanaLearning,$=id=>document.getElementById(id),esc=C.esc;
+const C=HanaCurriculum,L=HanaLearning,T=HanaLessons,$=id=>document.getElementById(id),esc=C.esc;
 let learning=L.clean(null),session=null,year=3,running=false,ready=false,method='keyboard',stage='understand';
 let saveChain=Promise.resolve(),liveStroke=null,savingDraft=false;
 const prompts={understand:'What do you know? What must you find?',connect:'Would a bar model, a drawing or a known fact help?',solve:'Write the steps in your own way.',verify:'Check with another method. Does the answer make sense?'};
@@ -14,7 +14,7 @@ function persist(){
  saveChain=saveChain.catch(()=>{}).then(async()=>{await store.set('hq_learning',a);await store.set('hq_session',b);await store.set('hq_year',year);});return saveChain;
 }
 function saveDraft(){
- if(!running||!current()||savingDraft)return;
+ if(!running||!current()||session.phase==='lesson'||savingDraft)return;
  current().entry=q.entry||'';
  if(method==='write'&&wpad.strokes.length)current().answerStrokes=wpad.strokes;
  persist();
@@ -42,22 +42,25 @@ function home(){pause();stopZap();stopRace();mode='home';renderBuddyHome();show(
 function start(kind='daily',focus=null){
  if(!ready)return;
  pause();stopZap();stopRace();
- const sk=C.skills.find(s=>s.id===focus);
- const queue=sk?.manual?[focus]:L.plan(learning,C.skills,year,kind,focus);
+ const queue=L.plan(learning,C.skills,year,kind,focus);
  if(!queue.length)return;
- session={id:uid(),year,kind,queue,index:0,results:[],current:null};
+ session={id:uid(),year,kind,queue,index:0,results:[],current:null,phase:'practice',taught:{},reteachFor:{}};
  running=true;audio()?.resume?.().catch(()=>{});helloOnce();makeQuestion();
 }
 function makeQuestion(){
  if(!session||session.index>=session.queue.length){finish();return;}
- const id=session.queue[session.index],tier=L.evidence(learning,id).tier;
+ const id=session.queue[session.index],evidence=L.evidence(learning,id),tier=evidence.tier;
  const recent=new Set(learning.events.filter(e=>e.skill===id).slice(-20).map(e=>e.signature));let spec;
  for(let i=0;i<24;i++){spec=C.generate(id,tier);if(!recent.has(spec.signature))break;}
  session.current={id:uid(),spec,tries:0,hints:0,entry:'',done:false,revealed:false,started:Date.now(),elapsed:0,notes:{},strokes:[],answerStrokes:[]};
- stage='understand';renderCurrent();persist();
+ stage='understand';session.phase='practice';session.taught||={};session.reteachFor||={};
+ if(session.kind!=='checkin'&&(!session.taught[id]&&(session.index===0||!learning.lessons[id]))){openLesson('intro');return;}
+ if(session.kind!=='checkin'&&evidence.reteach&&session.reteachFor[id]!==evidence.last.id){session.reteachFor[id]=evidence.last.id;openLesson('reteach');return;}
+ renderCurrent();persist();
 }
 function renderCurrent(){
  const c=current();if(!c)return;
+ if(session.phase==='lesson'){renderLesson();return;}
  running=true;mode='num';show('quiz');stopAllAudio();clearSigns();clearTimeout(q.lookTimer);
  // Copy the persisted question, never regenerate it on reopen or reload.
  const s=c.spec;
@@ -67,6 +70,8 @@ function renderCurrent(){
  $('questionCount').textContent=`Question ${session.index+1} of ${session.queue.length}`;
  $('sessionProgress').max=session.queue.length;$('sessionProgress').value=session.index;
  $('topicHeading').textContent=s.title;
+ $('replayLesson').hidden=c.done;
+ $('replayLesson').textContent=session.kind==='checkin'?'Learn this skill':'Review the lesson';
  $('qtext').textContent=s.qtext;
  $('qvis').innerHTML=s.vis||'';$('eqline').innerHTML=s.eq||'';
  $('quizSpeech').textContent=c.done?(c.feedback||s.fact):'';
@@ -80,6 +85,56 @@ function renderCurrent(){
  renderThinking();
  if(!c.done&&ttsQuestions())say(s.phrase);
 }
+function openLesson(reason='replay'){
+ const c=current();if(!c||!T.get(c.spec.skill))return;
+ if(reason==='replay')saveDraft();stopAllAudio();
+ if(reason==='replay'&&!c.done)c.lessonHelp=true;
+ session.phase='lesson';session.lesson={skill:c.spec.skill,slide:0,reason,checked:false,selected:null,passed:false,tries:0};
+ renderLesson();persist();
+}
+function renderLesson(){
+ const ls=session?.lesson,d=T.get(ls?.skill);if(!d)return;
+ running=true;mode='home';show('lesson');stopAllAudio();clearTimeout(q.lookTimer);clearSigns();
+ const skill=C.skills.find(s=>s.id===ls.skill);
+ $('lessonBadge').textContent=`Primary ${skill.year} · ${skill.topic}`;
+ $('lessonCount').textContent=`${ls.slide+1} of 3`;$('lessonProgress').value=ls.slide+1;
+ $('lessonTitle').textContent=skill.name;
+ $('lessonReason').textContent=ls.reason==='reteach'?'Let’s try the idea together':ls.reason==='replay'?'A little reminder':'Learn it, then try it';
+ document.querySelectorAll('.lesson-tabs span').forEach((el,i)=>el.setAttribute('aria-current',i===ls.slide?'step':'false'));
+ $('lessonHeading').textContent=ls.slide===0?d.goal:ls.slide===1?d.example:d.check.question;
+ $('lessonBody').innerHTML=ls.slide===0?`<p>${esc(d.idea)}</p>`:ls.slide===1?`<ol class="lesson-steps">${d.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>`:'<p>Have a go. We’ll work through the answer together.</p>';
+ $('lessonVisual').innerHTML=d.visual||'';
+ $('lessonChoices').innerHTML=ls.slide===2?d.check.options.map((v,i)=>`<button data-check="${i}" ${ls.checked?'disabled':''} class="${ls.checked&&v===d.check.answer?'right':ls.checked&&v===ls.selected?'wrong':''}">${esc(v)}</button>`).join(''):'';
+ $('lessonChoices').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  if(ls.checked)return;ls.selected=d.check.options[+b.dataset.check];ls.passed=ls.selected===d.check.answer;ls.tries++;ls.checked=true;
+  renderLesson();if(soundOn)playVoice(ls.passed?'first':'hint');persist();
+ });
+ $('lessonFeedback').textContent=ls.slide===2&&ls.checked?(ls.passed?'That’s it! ':'Let’s work it through. ')+d.check.explanation:'';
+ $('lessonBack').disabled=ls.slide===0;
+ $('lessonNext').disabled=ls.slide===2&&!ls.checked;
+ $('lessonNext').textContent=ls.slide===0?'See an example →':ls.slide===1?'Have a go →':ls.reason==='replay'?'Back to my question →':'Practise this →';
+ $('listenLesson').disabled=!soundOn||!ttsAllowed();
+ $('listenLesson').title=!soundOn?'Turn sound on to listen.':!ttsAllowed()?'Turn read-aloud on in More → Mum & Dad’s voices.':'Read this page aloud';
+}
+function finishLesson(){
+ const ls=session.lesson,c=current();if(!ls.checked)return;
+ learning=L.merge(learning,{lessons:{[ls.skill]:{at:Date.now(),passed:ls.passed,tries:ls.tries}}});
+ session.taught||={};session.taught[ls.skill]=true;
+ const e=L.evidence(learning,ls.skill);if(e.last){session.reteachFor||={};session.reteachFor[ls.skill]=e.last.id;}
+ // A missed introduction check starts practice with a smaller step. A replay
+ // preserves the exact question and draft, and records that it was supported.
+ if(!ls.passed&&ls.reason!=='replay'&&c.spec.tier>1)c.spec=C.generate(ls.skill,1);
+ session.phase='practice';renderCurrent();persist();schedulePush();
+}
+$('lessonBack').onclick=()=>{if(session.lesson.slide>0){session.lesson.slide--;renderLesson();persist();$('lessonHeading').focus();}};
+$('lessonNext').onclick=()=>{if(session.lesson.slide<2){session.lesson.slide++;renderLesson();persist();$('lessonHeading').focus();}else finishLesson();};
+$('listenLesson').onclick=()=>{
+ if(!soundOn||!ttsAllowed())return;
+ const ls=session.lesson,d=T.get(ls.skill);stopAllAudio();
+ const words=ls.slide===0?d.goal+'. '+d.idea:ls.slide===1?d.example+'. '+d.steps.join(' '):d.check.question+'. '+d.check.options.join('. ')+(ls.checked?'. '+d.check.explanation:'');
+ say(words);
+};
+$('replayLesson').onclick=()=>openLesson('replay');
 function answerUI(){
  const c=current();if(!c)return;
  const oldSaving=savingDraft;savingDraft=true;
@@ -116,9 +171,9 @@ function setInput(m){
  const entry=current()?.entry||'';savingDraft=true;answerUI();q.entry=entry;renderEntry();savingDraft=false;persist();
 }
 function answer(correct,btn){
- const c=current();if(!running||!c||c.done)return;
+ const c=current();if(!running||session.phase==='lesson'||!c||c.done)return;
  audio()?.resume?.().catch(()=>{});
- if(correct){settle(!c.tries&&!c.hints,false);if(btn)btn.classList.add('right');}
+ if(correct){settle(!c.tries&&!c.hints&&!c.lessonHelp,false);if(btn)btn.classList.add('right');}
  else{
   c.tries++;q.tries=c.tries;padLocked=false;
   $('quizSpeech').textContent='Have another look. You can change your answer or ask for a hint.';
@@ -132,8 +187,10 @@ function settle(independent,revealed,manual=false){
  const c=current();if(!c||c.done)return;
  c.done=true;c.revealed=revealed;padLocked=true;
  c.feedback=manual?'Saved for a grown-up’s review.':revealed?'Let’s learn from this. '+c.spec.fact:independent?'You worked it out! '+c.spec.fact:'You got there with help. '+c.spec.fact;
- const event={id:c.id,session:session.id,skill:c.spec.skill,year:c.spec.year,tier:c.spec.tier,at:Date.now(),independent:!!independent,correct:!revealed&&!manual,manual,hints:c.hints,tries:c.tries,revealed,elapsedMs:c.elapsed+Math.max(0,Date.now()-c.started),signature:c.spec.signature,question:c.spec.qtext,answer:c.spec.ans,notes:c.notes,strokes:c.strokes};
+ const event={id:c.id,session:session.id,skill:c.spec.skill,year:c.spec.year,tier:c.spec.tier,at:Date.now(),independent:!!independent,correct:!revealed&&!manual,manual,lessonHelp:!!c.lessonHelp,hints:c.hints,tries:c.tries,revealed,elapsedMs:c.elapsed+Math.max(0,Date.now()-c.started),signature:c.spec.signature,question:c.spec.qtext,answer:c.spec.ans,notes:c.notes,strokes:c.strokes};
  learning=L.merge(learning,{events:[event]});session.results.push(event);
+ const nextEvidence=L.evidence(learning,c.spec.skill);
+ if(!manual&&session.kind!=='checkin')c.feedback+=' '+(nextEvidence.reteach?'We’ll revisit the idea before the next question.':nextEvidence.change==='stretch'?'You’re ready for a little more challenge.':nextEvidence.change==='support'?'Let’s use a smaller step next.':'');
  const fact=c.spec.fact;
  renderCurrent();
  if(!manual){
@@ -149,7 +206,7 @@ function renderHint(){
  box.textContent=c.spec.help;
 }
 function hint(){
- const c=current();if(!running||!c||c.done)return;
+ const c=current();if(!running||session.phase==='lesson'||!c||c.done)return;
  c.hints++;renderHint();stopAllAudio();playVoice('hint');persist();
 }
 function finish(){
@@ -165,11 +222,11 @@ function next(){
 }
 function renderMap(){
  const pool=C.skills.filter(s=>s.year===year),topics=[...new Set(pool.map(s=>s.topic))];
- $('skillMap').innerHTML=topics.map(topic=>`<section class="skill-group"><h3>${esc(topic)}</h3><div class="skill-grid">${pool.filter(s=>s.topic===topic).map(s=>{const e=L.evidence(learning,s.id);return `<button class="skill-tile" data-skill="${s.id}" data-secure="${e.secure}">${esc(s.name)}<small>${s.manual?'Draw · grown-up review':e.label+(e.due?' · Ready to review':'')}</small></button>`;}).join('')}</div></section>`).join('');
+ $('skillMap').innerHTML=topics.map(topic=>`<section class="skill-group"><h3>${esc(topic)}</h3><div class="skill-grid">${pool.filter(s=>s.topic===topic).map(s=>{const e=L.evidence(learning,s.id);return `<button class="skill-tile" data-skill="${s.id}" data-secure="${e.secure}">${esc(s.name)}<small>${s.manual?'Lesson + drawing · grown-up review':(learning.lessons[s.id]?'Lesson explored · ':'Learn first · ')+e.label+(e.due?' · Ready to review':'')}</small></button>`;}).join('')}</div></section>`).join('');
  $('skillMap').querySelectorAll('[data-skill]').forEach(b=>b.onclick=()=>{$('mapDialog').close();start('focus',b.dataset.skill);});
 }
 function renderReport(){
- $('learningReport').innerHTML=[3,4].map(y=>`<strong>Primary ${y}</strong>`+C.skills.filter(s=>s.year===y).map(s=>{const e=L.evidence(learning,s.id),manual=learning.events.filter(e=>e.skill===s.id&&e.manual);return `<div class="result-row"><span>${esc(s.name)}</span><span>${s.manual?manual.length+' saved for review':e.total?e.success+'/'+e.recent+' independent recently · '+e.label:'No evidence yet'}</span></div>`;}).join('')).join('<br>');
+ $('learningReport').innerHTML=[3,4].map(y=>`<strong>Primary ${y}</strong>`+C.skills.filter(s=>s.year===y).map(s=>{const e=L.evidence(learning,s.id),manual=learning.events.filter(e=>e.skill===s.id&&e.manual);return `<div class="result-row"><span>${esc(s.name)}</span><span>${s.manual?manual.length+' saved for review':(learning.lessons[s.id]?'Lesson explored · ':'')+(e.total?e.success+'/'+e.recent+' independent recently · level '+e.tier+' · '+e.label:'No practice evidence yet')}</span></div>`;}).join('')).join('<br>');
 }
 function openDialog(id,trigger){
  $(id).showModal();$(trigger).setAttribute('aria-expanded','true');
@@ -232,7 +289,7 @@ $('scratchClear').onclick=()=>{if(running&&current()){current().strokes=[];commi
 window.addEventListener('resize',()=>{if($('thinkDialog').open)drawScratch();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){saveDraft();stopAllAudio();}});
 window.addEventListener('pagehide',saveDraft);
-window.HanaStudio={active:()=>running&&!!current(),renderCurrent,answer,answerUI,setInput,hint,pause,saveDraft,renderReport,reload,getLearning:()=>learning,mergeLearning:async other=>{const local=readJSON(await store.get('hq_learning'),{});learning=L.merge(L.merge(local,learning),other);await store.set('hq_learning',JSON.stringify(learning));renderHome();},start,getSession:()=>session};
+window.HanaStudio={active:()=>running&&session?.phase!=='lesson'&&!!current(),renderCurrent,answer,answerUI,setInput,hint,pause,saveDraft,renderReport,reload,getLearning:()=>learning,mergeLearning:async other=>{const local=readJSON(await store.get('hq_learning'),{});learning=L.merge(L.merge(local,learning),other);await store.set('hq_learning',JSON.stringify(learning));renderHome();},start,getSession:()=>session};
 $('startDaily').disabled=true;$('startCheckin').disabled=true;
 Promise.resolve(window.hanaBoot).then(reload).then(()=>{ready=true;renderHome();}).catch(()=>{ready=true;renderHome();});
 })();

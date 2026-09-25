@@ -65,7 +65,7 @@ test('cloud evidence merges by stable event identity and preserves local data fr
  const a={id:'a',skill:'p3-addsub',tier:1,at:1,independent:true},b={...a,id:'b',at:2};
  assert.deepEqual(L.merge({events:[a]},{events:[a,b]}).events,[a,b]);
  assert.deepEqual(L.merge({events:[a]},{}).events,[a]);
- assert.deepEqual(L.merge(null,null),{version:1,events:[]});
+ assert.deepEqual(L.merge(null,null),{version:2,events:[],lessons:{}});
 });
 test('failed or supported work becomes due after one day, independent work after two',()=>{
  const now=Date.now(),e={id:'a',skill:'p3-addsub',tier:1,at:now-86400001,independent:false};

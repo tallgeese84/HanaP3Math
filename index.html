@@ -616,9 +616,10 @@
     .choices button{ font-size:20px; }
   }
 </style>
-<link rel="stylesheet" href="studio.css?v=h12">
-<script src="curriculum.js?v=h12"></script>
-<script src="learning.js?v=h12"></script>
+<link rel="stylesheet" href="studio.css?v=h13">
+<script src="curriculum.js?v=h13"></script>
+<script src="learning.js?v=h13"></script>
+<script src="lessons.js?v=h13"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -718,8 +719,8 @@
         <h1>Your next adventure,<br>Hana.</h1>
         <p>Make a plan, try it out, and see what you can do. Your Pokémon are coming too.</p>
         <div class="grade-toggle" role="group" aria-label="Choose school year"><button data-year="3" aria-pressed="true">Primary 3</button><button data-year="4" aria-pressed="false">Primary 4</button></div>
-        <div class="home-actions"><button class="btn primary" id="startDaily">Let’s practise →</button><button class="btn" id="resumeSession" hidden>Continue my session</button><button class="btn" id="startCheckin">Find my starting point</button></div>
-        <div class="muted" style="font-size:13px">6 questions at a time · No timer · Mum &amp; Dad’s voices</div>
+        <div class="home-actions"><button class="btn primary" id="startDaily">Learn &amp; practise →</button><button class="btn" id="resumeSession" hidden>Continue my session</button><button class="btn" id="startCheckin">Find my starting point</button></div>
+        <div class="muted" style="font-size:13px">A short lesson + 6 questions · No timer · Mum &amp; Dad’s voices</div>
       </div>
       <div class="buddy-stage"><div id="buddyBox"></div></div>
     </div>
@@ -740,6 +741,16 @@
       <div class="tgrid" id="tgrid"></div>
     </div>
   </div>
+
+  <main class="screen" id="scr-lesson" aria-labelledby="lessonTitle">
+    <div class="practice-meta"><span id="lessonBadge">Your mini classroom</span><span id="lessonCount">1 of 3</span></div>
+    <progress id="lessonProgress" value="1" max="3" aria-label="Lesson progress"></progress>
+    <p class="eyebrow" id="lessonReason"></p><h2 id="lessonTitle"></h2>
+    <div class="lesson-tabs" aria-label="Lesson steps"><span>The idea</span><span>Watch me</span><span>Your turn</span></div>
+    <article class="card lesson-card"><h3 id="lessonHeading" tabindex="-1"></h3><div id="lessonBody"></div><div id="lessonVisual"></div><div id="lessonChoices" class="choices"></div><p id="lessonFeedback" role="status" aria-live="polite"></p></article>
+    <div class="session-actions"><button class="text-action" id="listenLesson">Read this aloud</button><button class="btn" id="lessonBack">← Back</button><button class="btn primary" id="lessonNext">See an example →</button></div>
+    <p class="session-context">Read, listen, or take another look. There’s no rush.</p>
+  </main>
 
   <!-- QUIZ (num / addsub / muldiv / frac / money / time) -->
   <main class="screen" id="scr-quiz">
@@ -774,7 +785,7 @@
         </div>
       </div>
     </div>
-    <div class="session-actions"><button class="text-action" id="listenQuestion">Listen to the question</button><button class="text-action" id="hintButton">Need a hint?</button><button class="text-action" id="revealButton" hidden>Show the solution</button><button class="btn primary" id="nextQuestion" hidden>Next question →</button></div>
+    <div class="session-actions"><button class="text-action" id="listenQuestion">Listen to the question</button><button class="text-action" id="replayLesson">Review the lesson</button><button class="text-action" id="hintButton">Need a hint?</button><button class="text-action" id="revealButton" hidden>Show the solution</button><button class="btn primary" id="nextQuestion" hidden>Next question →</button></div>
   </main>
 
   <section class="screen" id="scr-summary" aria-labelledby="summaryTitle"><div class="eyebrow">Session complete</div><h2 id="summaryTitle">Good thinking, Hana.</h2><div id="summaryStats"></div><p class="summary-review">Independent answers and work with help are shown separately.</p><div id="summaryList"></div><div class="summary-buttons"><button class="btn primary" id="summaryHome">Back to my studio</button><button class="btn" id="summaryAgain">Another six questions</button></div></section>
@@ -821,8 +832,8 @@
 
 <nav class="studio-dock" aria-label="Studio tools"><button id="dockHome">Practice</button><button id="dockThink" aria-controls="thinkDialog" aria-expanded="false">✎ Think</button><button id="dockMap" aria-controls="mapDialog" aria-expanded="false">My map</button><button id="dockMore" aria-controls="moreDialog" aria-expanded="false">More</button></nav>
 <dialog class="studio-dialog" id="thinkDialog" aria-labelledby="thinkTitle"><div class="dialog-head"><h2 id="thinkTitle">Make your thinking visible.</h2><button class="btn" data-close aria-label="Close thinking pad">×</button></div><div class="think-tabs" role="tablist" aria-label="Thinking stages"><button role="tab" data-stage="understand" aria-selected="true">Understand</button><button role="tab" data-stage="connect" aria-selected="false">Connect</button><button role="tab" data-stage="solve" aria-selected="false">Solve</button><button role="tab" data-stage="verify" aria-selected="false">Check</button></div><p class="think-prompt" id="thinkPrompt">What do you know? What must you find?</p><label for="workingText">My notes</label><textarea id="workingText" maxlength="2000" placeholder="Write or type your plan…"></textarea><div class="scratch-tools"><span>Draw a bar model or work it out</span><button class="btn" id="scratchUndo">Undo</button><button class="btn" id="scratchClear">Clear drawing</button></div><canvas id="scratchPad" width="600" height="220" aria-label="Draw your working with a stylus, finger or mouse"></canvas><p class="map-note">Your notes stay with this question. Drawings are saved for review; they are not automatically marked.</p></dialog>
-<dialog class="studio-dialog" id="mapDialog" aria-labelledby="mapTitle"><div class="dialog-head"><h2 id="mapTitle">My skill map.</h2><button class="btn" data-close aria-label="Close skill map">×</button></div><div class="grade-toggle" role="group" aria-label="Map school year"><button data-year="3" aria-pressed="true">Primary 3</button><button data-year="4" aria-pressed="false">Primary 4</button></div><p class="map-note">Pick a skill to practise. “Secure” needs independent success on different days. Drawing tasks need a grown-up’s check.</p><div id="skillMap"></div></dialog>
-<dialog class="studio-dialog" id="moreDialog" aria-labelledby="moreTitle"><div class="dialog-head"><h2 id="moreTitle">Your studio.</h2><button class="btn" data-close aria-label="Close more options">×</button></div><div class="more-stack"><button class="btn" id="openFamilySettings">Mum &amp; Dad’s voices, backup &amp; sync</button><button class="btn" id="openCollection">My Pokémon collection</button><details><summary>How practice works</summary><p>Choose a year. A starting-point check samples new skills over several short sittings; it is not a placement test. Daily practice brings back questions to review and grows within the chosen year. Hints and retries earn encouragement but do not count as independent mastery.</p><p>Drawing, measuring and construction also need paper, a ruler or protractor and a grown-up’s feedback.</p><a href="https://www.moe.gov.sg/primary/curriculum/syllabus" target="_blank" rel="noopener">Singapore MOE syllabus</a></details></div></dialog>
+<dialog class="studio-dialog" id="mapDialog" aria-labelledby="mapTitle"><div class="dialog-head"><h2 id="mapTitle">My skill map.</h2><button class="btn" data-close aria-label="Close skill map">×</button></div><div class="grade-toggle" role="group" aria-label="Map school year"><button data-year="3" aria-pressed="true">Primary 3</button><button data-year="4" aria-pressed="false">Primary 4</button></div><p class="map-note">Pick a skill for a short lesson and practice. “Secure” needs independent success on different days. Drawing tasks need a grown-up’s check.</p><div id="skillMap"></div></dialog>
+<dialog class="studio-dialog" id="moreDialog" aria-labelledby="moreTitle"><div class="dialog-head"><h2 id="moreTitle">Your studio.</h2><button class="btn" data-close aria-label="Close more options">×</button></div><div class="more-stack"><button class="btn" id="openFamilySettings">Mum &amp; Dad’s voices, backup &amp; sync</button><button class="btn" id="openCollection">My Pokémon collection</button><details><summary>How practice works</summary><p>Choose a year. A starting-point check samples new skills over several short sittings; it is not a placement test. Daily sessions begin with a visual lesson, a worked example and a learning check. Then practise one skill and review familiar skills. Three independent answers at a level increase the challenge; two supported answers lower it. Repeated mistakes or a revealed answer trigger a recap. Hints, retries and lesson replays do not count as independent mastery.</p><p>Drawing, measuring and construction also need paper, a ruler or protractor and a grown-up’s feedback.</p><a href="https://www.moe.gov.sg/primary/curriculum/syllabus" target="_blank" rel="noopener">Singapore MOE syllabus</a></details></div></dialog>
 <div id="fx"></div>
 <div id="bigcheer"><span id="cheerText">Great job! ⭐</span></div>
 <div id="catch"><div class="box" id="catchBox"></div></div>
@@ -914,7 +925,7 @@
      2. add a line to CHANGELOG.md saying what changed
    The version shows under the title and in ☁️ → Check build.
    ============================================================ */
-const APP_VERSION = 'h12';
+const APP_VERSION = 'h13';
 /* ============================================================
    PokéMath Quest — Hana · Singapore MOE Primary 3 maths
    Numbers to 10 000 · Add & Subtract · Multiply & Divide
@@ -1055,7 +1066,7 @@ function renderSoundButton(){
   button.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3Z" fill="none" stroke="currentColor" stroke-width="1.6"/>'+ (soundOn?'<path d="M16 8q5 4 0 8" fill="none" stroke="currentColor" stroke-width="1.6"/>':'<path d="m16 9 6 6m0-6-6 6" stroke="currentColor" stroke-width="1.6"/>')+'</svg>';
   button.setAttribute('aria-label',soundOn?'Mute sound':'Turn sound on');
   button.setAttribute('aria-pressed',String(soundOn));
-  const listen=document.getElementById('listenQuestion');if(listen)listen.disabled=!soundOn||!ttsAllowed();
+  const listen=document.getElementById('listenQuestion');if(listen)listen.disabled=!soundOn||!ttsAllowed();const lessonListen=document.getElementById('listenLesson');if(lessonListen)lessonListen.disabled=!soundOn||!ttsAllowed();
 }
 function speechIdle(){
   return !speaking && !speechQ.length && !(typeof voiceBusy === 'function' && voiceBusy());
@@ -1433,7 +1444,7 @@ function catchMon(){
 }
 
 /* ---------- screens ---------- */
-const screens = { home:'scr-home', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', summary:'scr-summary' };
+const screens = { home:'scr-home', lesson:'scr-lesson', quiz:'scr-quiz', zap:'scr-zap', tower:'scr-tower', team:'scr-team', summary:'scr-summary' };
 let mode = 'home';
 function show(name){
   Object.values(screens).forEach(id => document.getElementById(id).classList.remove('on'));
@@ -4046,6 +4057,6 @@ document.getElementById('buildTag').textContent = 'build ' + APP_VERSION;
 renderSoundButton();document.getElementById('cloudBtn').textContent='⋯';document.getElementById('cloudBtn').setAttribute('aria-label','Grown-up settings');
 window.hanaBoot = loadStars();
 </script>
-<script src="studio.js?v=h12"></script>
+<script src="studio.js?v=h13"></script>
 </body>
 </html>
