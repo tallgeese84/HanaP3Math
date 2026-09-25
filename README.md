@@ -1,71 +1,58 @@
-# PokéMath Quest — Hana (Primary 3)
+# Hana’s Maths Studio — Singapore P3 & P4
 
-A personal maths practice game for Hana, pitched at the Singapore MOE
-Primary 3 (2021) syllabus, wrapped in the same catch-them-all game as her
-brother's PokéMath Adventure — but a fully separate app with its own
-progress, its own cloud-sync slot, and its own install icon.
+A personal maths app for Hana. **Build h12** brings Euna’s Mochi-style workspace to Hana’s existing PokéMath app: violet colours, one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
 
-**Topics** (each levels up on its own as answers become quick and first-try):
+[Open the app](https://tallgeese84.github.io/HanaP3Math/)
 
-- Numbers to 10 000 — place value, compare/order, patterns, odd/even, number words
-- Add & Subtract — up to 4-digit, with regrouping and missing-number questions
-- Multiply & Divide — tables 2–10 (focus 6–9), up to 3-digit × 1-digit, remainders
-- Fractions — shading, equivalent, simplest form, comparing, adding/subtracting related fractions
-- Money — dollars & cents, adding/subtracting, making change (Singapore dollars)
-- Time & Measure — clock reading to the minute, duration, km/m/cm · kg/g · ℓ/mℓ conversions
-- Decimals — tenths to thousandths, compare, round, fraction↔decimal, + − × ÷ (P4)
-- Shapes & Angles — perimeter & area (incl. composite figures), angle types and degrees, symmetry, nets (P4)
-- Graphs & Data — tables, bar graphs and line graphs (P3–P4)
-- Wild Catch — quick-fire times tables · Pattern Race — skip counting vs Meowth
+![Hana’s studio](docs/preview-desktop.png)
 
-Levels 1–3 cover Primary 3; Level 4 in every topic carries the full
-Primary 4 syllabus, so the app spans P3 through P4 end to end.
+## Learning
 
-**Handwritten answers.** Number questions show a writing pad: Hana writes
-the answer with the stylus and a small neural network (`digit-net.json`,
-trained on 150 000 handwritten digits including Singapore school-form
-shapes, running fully offline) reads her digits. The keypad is still there
-— toggle on the quiz screen or in the grown-ups panel.
+- Choose **Primary 3** or **Primary 4** explicitly. Practice never promotes a child into a different school year automatically.
+- **Let’s practise** gives six questions, prioritising due review and unexplored skills. **Find my starting point** samples new skills across successive sittings. This is formative practice, not a standardised placement test.
+- **My map** offers 43 skills: 18 in P3 and 25 in P4. Forty support automatic answer checking; three construction groups save work for a grown-up’s review.
+- Four recent questions with at least three independent answers allow a higher tier where the question family supports larger numbers. There is no response-speed requirement. Topics with a fixed concept use varied examples within the same scope.
+- “Secure” requires at least six recent observations, five independent answers, three independent answers at tier 2 or above, and evidence on two different days. It is a practice indicator, not certification that every syllabus objective is mastered.
+- Hints, retries and revealed solutions are recorded separately. Supported success earns encouragement and rewards, but does not count as independent evidence. Previous stars/counters are not converted into mastery.
+- Think: **Understand → Connect → Solve → Check**. Typed notes and stylus drawings remain with the question, survive closing panels and are included in backups. Paper/ruler/protractor work needs a grown-up’s check.
+- Select **Next question** when ready; solutions no longer disappear on a timer.
 
-**Hana's voice pack.** `hana-voice.json` holds Dad's recorded clips.
-The app plays them at the matching moments: *hello* on opening, *first* for
-first-try answers, *recover* for a comeback, *retry* after a wrong answer,
-*hint* with hints, *streak* on hot streaks, *sky* for catches and race wins,
-*bye* when leaving. Robot voice (TTS) reads the questions and math facts,
-and steps in if a clip is missing. The grown-ups panel (triple-tap the
-title, or ☁️) has an on/off switch and test buttons for every category.
+The curriculum uses the [Singapore MOE 2021 Mathematics Syllabus, October 2025 update](https://www.moe.gov.sg/api/media/92bff26d-b2b4-4535-b868-b8415c744b91/2021-Primary-Mathematics-Syllabus-P1-to-P6-Updated-October-2025.pdf), pages 35–40. See [the review and scope notes](docs/CURRICULUM_REVIEW.md). Questions are original. This app supplements classroom teaching and practical measurement/construction.
 
-Pokémon names and artwork are © Nintendo / Game Freak / The Pokémon Company.
-Artwork is loaded at runtime from [PokeAPI](https://pokeapi.co) sprite hosting
-and is not included in this repository. Personal, non-commercial project.
+## Family audio
 
-## Hosting on GitHub Pages
-1. Create a **new** repository (separate from PokéMath) and upload the contents
-   of this folder (index.html at the root, including `hana-voice.json`).
-2. Repo Settings → Pages → Source: `main` branch, `/ (root)` → Save.
-3. Your app is at `https://<username>.github.io/<repo>/` after a minute or two.
+`hana-voice.json` is unchanged: **62 recordings, Mum and Dad**, with Both / Dad / Mum selection and the existing greeting, praise, retry, hint, streak, catch and goodbye categories. No paid voice service or voice cloning is used. Device speech reads new question text when enabled. Recorded clips and speech use the existing sequential audio pipeline; muting now also cancels active/pending recorded playback.
 
-## Installing on the tablet
-1. Open the URL in Safari (iPad) or Chrome (Android) **with internet on** —
-   the first visit downloads and caches everything, including the voice pack
-   and the Pokémon pictures.
-2. Safari: Share → **Add to Home Screen**. Chrome: menu → **Add to Home screen** / **Install app**.
-3. From then on it launches from its own icon and works fully offline.
-   It can live on the same tablet as PokéMath Adventure without touching
-   Jonah's stars or Pokémon.
+More → **Mum & Dad’s voices, backup & sync** opens the original controls. TTS choices remain All / Answers only / Off. TTS Off does not disable the family clips.
 
-## Cloud sync
-The grown-ups panel accepts the same Firebase database URL and family code as
-the other family apps; Hana's progress is stored under its own
-`pokequest-hana` slot so nothing collides.
+## Progress, backup and offline use
 
-## Shipping updates
-Every fix gets a version number (h1, h2, h3, …). To ship one:
-1. Bump `APP_VERSION` in `index.html`.
-2. Set `CACHE = 'pokequest-hana-<same version>'` in `sw.js` so installed
-   tablets pick up the new files.
-3. Add a line to `CHANGELOG.md` saying what changed.
+Existing `hq_*` keys and the Firebase `pokequest-hana` slot remain. New per-question evidence is stored in `hq_learning`; the unfinished session in `hq_session`; selected school year in `hq_year`. Backup codes include these keys and existing rewards/settings. Cloud sync merges evidence by stable event ID; unfinished work stays local to each device. Avoid editing the same backup on old versions: old clients do not understand the new evidence fields.
 
-The running build shows under the home-screen title (e.g. "build h3") and in
-the grown-ups panel via 🔎 Check build — so you can always tell whether a
-tablet has updated yet.
+Open online once to cache the app, recordings, digit model and five starter artworks. The first catch (Pikachu) and core practice work offline. Additional Pokémon artwork is cached when fetched successfully online. The service worker replaces only Hana’s own caches, preserving other family apps on the same origin.
+
+The five bundled starter PNGs were extracted from the user-supplied `pokemon-academy-offline-official-artwork-v3-figures-fixed.zip`. The older SPERS-Sec question bank was not imported into P3/P4 practice. Pokémon names and artwork belong to Nintendo / Game Freak / The Pokémon Company. Personal, non-commercial project.
+
+## Checks
+
+No build step or runtime dependency is required; serve the repository as a static site.
+
+```sh
+npm test
+```
+
+The Node suite checks 38,700 generated questions, arithmetic/fraction limits, answer uniqueness, grade boundaries, diagnostic coverage, mastery/review rules, evidence merging, voice-file integrity and cache isolation.
+
+Browser regression tests use Playwright:
+
+```sh
+npm install --no-save playwright
+npx playwright install chromium
+npm run test:browser
+```
+
+`tests/browser.cjs` starts its own temporary HTTP server. It exercises the real app, preserved progress, hints/retries, six-question completion, resume/working notes, input switching, desktop/tablet/phone sizing, both recorded voices, offline audio and backup contents. `PLAYWRIGHT_MODULE` and `CHROMIUM_EXECUTABLE` can point to an existing runtime installation. Tests use isolated browser storage and never access a real family Firebase account.
+
+## Release
+
+Bump `APP_VERSION` in `index.html`, the `h12` asset query strings and the cache name/core entries in `sw.js` together. Run the tests, update `CHANGELOG.md`, then publish via the repository’s existing GitHub Pages setup.

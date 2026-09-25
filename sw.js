@@ -1,68 +1,33 @@
-// PokéMath Quest (Hana · P3) — offline cache
-// Keep this in step with APP_VERSION in index.html: 'pokequest-hana-<version>'
-const CACHE = 'pokequest-hana-h11';
-const ART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
-const CORE = ['./', './index.html', './manifest.json', './hana-voice.json', './hana-avatar.png', './digit-net.json', './icon-192.png', './icon-512.png'];
-
-self.addEventListener('install', e => {
-  e.waitUntil((async () => {
-    const c = await caches.open(CACHE);
-    await c.addAll(CORE);
-    // precache every artwork; tolerate individual failures
-    // Precache a core set (Gen 1 + legendaries). The remaining Pokémon are
-    // cached automatically the first time they appear while online.
-    const LEGEND_IDS = [243,244,245,249,250,251,377,378,379,380,381,382,383,384,385,386,480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,638,639,640,641,642,643,644,645,646,647,648,649,716,717,718,719,720,721,785,786,787,788,789,790,791,792,800,801,802,807,808,809,888,889,890,894,895,896,897,898,905,1007,1008,1017,1024,1025];
-    const all = [];
-    for (let i = 1; i <= 151; i++) all.push(i);
-    LEGEND_IDS.forEach(i => { if (!all.includes(i)) all.push(i); });
-    for (const i of all){
-      try{
-        const r = await fetch(ART + i + '.png', { mode: 'no-cors' });
-        await c.put(ART + i + '.png', r);
-      }catch(err){}
-    }
-    self.skipWaiting();
-  })());
+// Atomic app-shell cache. Family audio is core; artwork is cached on demand.
+const CACHE = 'pokequest-hana-h12';
+const PREFIX = 'pokequest-hana-';
+const CORE = ['./','./index.html','./manifest.json','./hana-voice.json','./hana-avatar.png','./digit-net.json','./icon-192.png','./icon-512.png','./studio.css?v=h12','./curriculum.js?v=h12','./learning.js?v=h12','./studio.js?v=h12','./art/1.png','./art/4.png','./art/7.png','./art/25.png','./art/133.png'];
+self.addEventListener('install',event=>{
+ event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(CORE);await self.skipWaiting();})());
 });
-
-self.addEventListener('activate', e => {
-  e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k);
-    self.clients.claim();
-  })());
+self.addEventListener('activate',event=>{
+ event.waitUntil((async()=>{
+  // Sibling family apps on the same GitHub Pages origin own their own caches.
+  for(const key of await caches.keys())if(key.startsWith(PREFIX)&&key!==CACHE)await caches.delete(key);
+  await self.clients.claim();
+ })());
 });
-
-self.addEventListener('fetch', e => {
-  const path = new URL(e.request.url).pathname;
-  // network-first for the page AND the voice pack, so updates (like adding
-  // Mum's clips) are picked up on the next online visit instead of being
-  // shadowed by the old cached copy
-  const isPage = e.request.mode === 'navigate' ||
-    path.endsWith('index.html') || path.endsWith('hana-voice.json');
-  e.respondWith((async () => {
-    if (isPage){
-      // network-first so a repo update shows on the next online visit
-      try{
-        const r = await fetch(e.request);
-        const c = await caches.open(CACHE);
-        c.put(e.request, r.clone());
-        return r;
-      }catch(err){
-        return (await caches.match(e.request, { ignoreSearch: true })) || Response.error();
-      }
-    }
-    // everything else (sprites, icons): cache-first for instant offline
-    const hit = await caches.match(e.request, { ignoreSearch: true });
-    if (hit) return hit;
-    try{
-      const r = await fetch(e.request);
-      if (r && (r.ok || r.type === 'opaque')){
-        const c = await caches.open(CACHE);
-        c.put(e.request, r.clone());
-      }
-      return r;
-    }catch(err){
-      return Response.error();
-    }
-  })());
+self.addEventListener('fetch',event=>{
+ const request=event.request,url=new URL(request.url),same=url.origin===self.location.origin;
+ if(request.method!=='GET')return;
+ const artwork=url.origin==='https://raw.githubusercontent.com'&&url.pathname.startsWith('/PokeAPI/sprites/');
+ if(!same&&!artwork)return; // Firebase progress and other apps are never cached here.
+ if(same&&!url.href.startsWith(self.registration.scope))return;
+ event.respondWith((async()=>{
+  const cache=await caches.open(CACHE);
+  const page=request.mode==='navigate'||url.pathname.endsWith('/index.html'),voice=url.pathname.endsWith('/hana-voice.json');
+  const hit=await cache.match(request);
+  if(page||voice){
+   try{const response=await fetch(request);if(response.ok){await cache.put(request,response.clone());return response;}if(hit)return hit;return response;}
+   catch{if(hit)return hit;if(page)return (await cache.match('./index.html'))||Response.error();return Response.error();}
+  }
+  if(hit)return hit;
+  try{const response=await fetch(request);if(response.ok||response.type==='opaque')await cache.put(request,response.clone());return response;}
+  catch{return Response.error();}
+ })());
 });
