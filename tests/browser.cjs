@@ -98,7 +98,7 @@ const root=path.join(__dirname,'..');
   await page.locator('#ppClose').click();
   // Focused practice at level two: a missed learning check selects a smaller step.
   await page.evaluate(async()=>{
-   const events=[0,1,2].map(i=>({id:'seed-'+i,skill:'p4-dimension',tier:1,at:100+i,independent:true}));
+   const events=[0,1,2].map(i=>({id:'seed-'+i,skill:'p4-dimension',tier:1,at:Date.now()-100+i,independent:true}));
    await HanaStudio.mergeLearning({events});HanaStudio.start('focus','p4-dimension');
   });
   assert.equal(await page.evaluate(()=>HanaStudio.getSession().current.spec.tier),2);

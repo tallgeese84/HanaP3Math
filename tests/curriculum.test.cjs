@@ -58,6 +58,8 @@ test('hints, retries, reveals and drawing cannot manufacture mastery; time is no
  assert.equal(L.evidence({events:independent},id).tier,3);
  assert.equal(L.evidence({events:independent},id).secure,false,'one sitting is not secure');
  independent[0].at-=86400000;
+ assert.equal(L.evidence({events:independent},id).secure,false,'a date boundary alone is not a recall check');
+ independent[7].phase='recall';independent[7].reviewGapMs=86400000;independent[6].phase='transfer';
  assert.equal(L.evidence({events:independent},id).secure,true);
  assert.equal(L.evidence({events:independent.map(e=>({...e,manual:true}))},id).secure,false);
 });
@@ -65,7 +67,7 @@ test('cloud evidence merges by stable event identity and preserves local data fr
  const a={id:'a',skill:'p3-addsub',tier:1,at:1,independent:true},b={...a,id:'b',at:2};
  assert.deepEqual(L.merge({events:[a]},{events:[a,b]}).events,[a,b]);
  assert.deepEqual(L.merge({events:[a]},{}).events,[a]);
- assert.deepEqual(L.merge(null,null),{version:2,events:[],lessons:{}});
+ assert.deepEqual(L.merge(null,null),{version:3,events:[],lessons:{},checks:[],exposures:{}});
 });
 test('failed or supported work becomes due after one day, independent work after two',()=>{
  const now=Date.now(),e={id:'a',skill:'p3-addsub',tier:1,at:now-86400001,independent:false};
