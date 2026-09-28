@@ -16,17 +16,25 @@ Older question history is retained. Missing responses/confidence/time are unknow
 - “Remembered later” requires at least six recent questions, five independent successes in the last eight, independent work on different days, an independent delayed recall, varied problem forms or an independent application, and at least three independent level-2-or-higher answers. This is an app heuristic, not an MOE grade or a placement decision.
 - Adult review remains necessary for drawings and free-text reasoning. No paid AI service or automatic grading of written reasoning is used.
 
-## Optional private Drive mirror
+## Private family Drive mirror (h16)
 
-Downloads and adaptation work immediately without setup. The mirror is a read-only reporting copy; existing Firebase family sync remains authoritative. Sync the family devices before taking a combined review. Snapshot timestamps prevent older exports overwriting newer ones, but the relay does not merge simultaneous unsynced devices.
+The mirror is a reporting copy; existing Firebase family sync remains authoritative. Sync the family devices before taking a combined review. Hana's relay rejects older snapshots but does not merge simultaneous unsynced devices. Jonah's session merge and Euna's backup format are unchanged.
 
-1. In the parent's Google Drive, create a **private** folder named `Hana Learning Mirror`. Copy its folder ID.
-2. Create a **new, separate** Google Apps Script project. Paste `tools/hana-drive-mirror.gs`. Do not replace or reuse Euna's relay: it accepts a different app and writes Euna's filenames.
-3. In Project Settings → Script properties, set `MIRROR_FOLDER_ID` to that folder ID and `MIRROR_SECRET` to a new random secret of at least 24 characters. Do not commit either setting to GitHub or paste it into a learning-review chat.
-4. Deploy as a web app executing as you, with access set to Anyone. The relay checks the body secret before accessing Drive. Keep the folder private; no public sharing is needed.
-5. In Hana's progress view, open **Optional private Drive mirror**, enter the `/exec` URL and the same secret, then choose **Save & send review**. Configure only the devices intended to send reports. Credentials stay in that browser and are excluded from exports and family backups.
-6. Confirm the private folder contains `hana-learning-latest.json`. The browser uses a cross-origin send and cannot inspect the relay's response; “request sent” does not confirm authentication or a successful write. The relay also keeps one refreshed snapshot per UTC day.
+### Reuse Euna and Jonah's connection
 
-Learning updates and family merges schedule a mirror request after 12 seconds, when configured. Offline learning stays local; reconnecting attempts a new snapshot. A fast close before sending may delay the mirror until the next app visit. Disconnecting stops future sends from that device and leaves existing Drive files intact. Delete the deployment and copies in Drive to remove them.
+1. Upgrade the **existing family Apps Script project** with `tools/family-drive-mirror.gs`. Read its live code first and retain any custom changes. Keep `MIRROR_SECRET`, `MIRROR_FOLDER_ID`, optional `JONAH_FOLDER_ID`, permissions and the existing deployment URL unchanged.
+2. Choose **Deploy → Manage deployments → Edit → New version → Deploy** on that existing deployment. Its public health response must list `Hana learning` alongside `Mochi learning` and `PokéMath learning`. GET never returns learning records.
+3. On Hana's usual device, open **More → Hana’s progress & next steps → Optional private Drive mirror → Use family connection**. This copies Euna's saved connection, or Jonah's if Euna's is unavailable, from the same browser. It does not save or upload until **Save & send review** is selected. If neither is saved in this browser, paste the URL and secret from their parent settings.
+4. Choose **Save & send review**. Verify `hana-learning-latest.json` in the existing private mirror folder. The browser's “request sent” message cannot confirm delivery; check the actual Drive file and its `receivedAt` timestamp.
 
-A mirror is not connected by publishing the app. Its private owner configuration is intentionally absent from this repository.
+The family relay keeps separate `euna-mochi`, `jonah-pokemath` and `hana-learning` filenames plus a refreshed weekly snapshot for each child. Optional `HANA_FOLDER_ID` sends Hana's files to a separate private folder. No new folder or Google authorization is normally required when upgrading an already-authorized family deployment with the same scopes.
+
+Credentials remain in the configured browser and are excluded from learning exports and family backups. Never commit secrets to GitHub or paste them into a chat. Sharing the relay does not automatically connect every device. The connection-copy button works only where the other app's settings are already saved on the same GitHub Pages origin; separate browser profiles and installed-app storage can differ.
+
+### Existing separate Hana relay
+
+The original `tools/hana-drive-mirror.gs` remains compatible for families who have already configured it. It keeps daily UTC snapshots. A separate relay is optional, not required. To switch, copy the family connection and save it after the family relay has been upgraded. Old private Drive files are left intact.
+
+Learning updates and family merges schedule a mirror request after 12 seconds, when configured. Offline learning stays local; reconnecting attempts a new snapshot. A fast close before sending may delay the mirror until the next app visit. Disconnecting stops future sends from that device and leaves existing Drive files intact.
+
+A mirror is not connected by publishing the app. No private owner configuration is included in this repository.
