@@ -1,3 +1,9 @@
+# h18 — private exam packs and assessment review
+
+- Import private P3/P4 paper packs, read original pages, and practise verified questions with adaptive difficulty, family audio, source references and normal progress reporting.
+- Correct checkpoint retake repairs, preserve course flags and checkpoint working in reports, validate money precision, and honour short custom target dates.
+- Clarify answer-check scores and record test dependencies.
+
 # PokéMath Quest — Hana · changelog
 
 One line per build. The running build shows under the home-screen title and

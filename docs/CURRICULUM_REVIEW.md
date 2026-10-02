@@ -70,3 +70,12 @@ Sixteen 2025 papers from CJ's Drive (P3 end-of-year: Henry Park, Raffles Girls',
 - **Scope by June.** WA1 (early March) covered numbers to 100 000, rounding, factors and multiples, multiplication/division with remainders and unit-model word problems, including an excess-and-shortage problem. WA2 (May) covered fractions (mixed numbers, fraction of a set, fraction word problems) and angles; one school's WA2 also included decimals. The course therefore places whole numbers, model drawing, fractions and angles before decimals, and finishes decimals before the June target.
 - **Answer conventions.** Remainders written as `461 R 3`, compound units (`2 km 480 m`), money with cents, mixed numbers, unit-model working (`2u = $480`). The typed answer boxes follow these.
 - **Still to calibrate.** Question-level difficulty of Section C. Reading the scanned question pages (for example, as images) would allow a closer match of multi-part problems.
+
+
+## h18: question-level review of the supplied scans
+
+The Drive folder contains 15 distinct P3/P4 PDFs, plus one duplicate. All 253 pages were rendered. Sixty selected questions were checked visually, independently solved, mapped to existing skills/levels, and converted to typed answers with hints and worked explanations. The private packs preserve all original pages; only the 60 verified items are automatically checked. They are not comprehensive coverage of every question or every curriculum objective.
+
+The h17 format description above is too uniform. The supplied P4 assessments vary: ACS Quiz 3 is 20 marks/50 minutes; Nan Hua WA3 is 25 marks/40 minutes; Henry Park WA2 is 30 marks/40 minutes; Red Swastika WA1 is 35 marks/45 minutes. The generated 35- and 54-point checkpoints are therefore app practice formats, not school-standard papers. Suggested times are labelled accordingly, and answer-check points are distinguished from method marks.
+
+The current app registers 54 skills (23 P3, 31 P4), including the word-problem module. Three construction skills need human review. Introductory lessons and heuristic adaptation remain supplements to teaching; this review does not establish educational effectiveness or certify Singapore school readiness.
