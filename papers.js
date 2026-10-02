@@ -54,7 +54,7 @@ function build(cpId,skills,{random=Math.random,now=Date.now(),units=null,title=n
  const typed=s=>{for(let k=0;k<6;k++)if(C.generate(s.id,2,r).kind!=='choice')return true;return false;};
  for(const s of mix(calc.filter(typed),calcReview.filter(typed),fmt.B)){let spec;for(let k=0;k<10;k++){spec=C.generate(s.id,2+Math.floor(r()*2),r);if(spec.kind!=='choice')break;}items.push({id:'q'+(++no),section:'B',marks:2,skill:s.id,spec});}
  const nC=fmt.C.length,fromMain=draw(wpMain,Math.min(nC,wpMain.length)),cs=[...fromMain,...draw(wpReview.length?wpReview:wpMain.length?wpMain:calc,nC-fromMain.length)];
- for(const [i,s] of cs.entries()){const tier=fmt.C[i]>=4?3:2,spec=C.generate(s.id,tier,r);if(spec.wordProblem)spec.vis='';items.push({id:'q'+(++no),section:'C',marks:fmt.C[i],skill:s.id,spec});}
+ for(const [i,s] of cs.entries()){const tier=fmt.C[i]>=4?3:2,spec=C.generate(s.id,tier,r);if(spec.wordProblem&&!spec.essentialVisual)spec.vis='';items.push({id:'q'+(++no),section:'C',marks:fmt.C[i],skill:s.id,spec});}
  const max=items.reduce((n,x)=>n+x.marks,0);
  return {id:'paper-'+uid(r),cp:cp.id,title:cp.title,style:cp.style,createdAt:now,minutes:fmt.minutes,max,items,complete:false};
 }
@@ -97,7 +97,7 @@ function score(paper,skills,{now=Date.now()}={}){
 // stored text is what Hana saw).
 function record(scored){
  return {id:scored.id,cp:scored.cp,title:scored.title,style:scored.style,at:scored.at,startedAt:scored.createdAt,updatedAt:scored.updatedAt,elapsedMs:scored.elapsedMs||null,minutes:scored.minutes,complete:true,score:scored.score,max:scored.max,pct:scored.pct,band:scored.band,recs:scored.recs,sections:scored.sections,topics:scored.topics,
-  items:scored.items.map(i=>({id:i.id,section:i.section,marks:i.marks,earned:i.earned,correct:i.correct,skill:i.skill,skillName:i.skillName,topic:i.topic,qtext:i.qtext,answer:i.answer,response:i.display,tag:i.tag,solution:i.solution,working:i.working||null}))};
+  items:scored.items.map(i=>({id:i.id,section:i.section,marks:i.marks,earned:i.earned,correct:i.correct,skill:i.skill,skillName:i.skillName,family:i.spec.family,bankRevision:i.spec.bankRevision,topic:i.topic,qtext:i.qtext,answer:i.answer,response:i.display,tag:i.tag,solution:i.solution,working:i.working||null}))};
 }
 const api={FORMATS,build,toChoice,markItem,score,record};
 if(node)module.exports=api;else root.HanaPapers=api;

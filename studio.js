@@ -63,9 +63,10 @@ function makeQuestion(){
  if(!session||session.index>=session.queue.length){finish();return;}
  const id=session.queue[session.index],evidence=L.evidence(learning,id),tier=evidence.tier,now=Date.now();
  const gap=now-L.exposure(learning,id),recall=evidence.total>0&&gap>=86400000;
- const application=!recall&&session.kind!=='checkin'&&evidence.success>=3&&K.hasTransfer(id)&&!session.results.some(e=>e.skill===id&&e.phase==='transfer');
+ const application=!recall&&session.kind!=='checkin'&&evidence.success>=3&&K.hasTransfer(id,tier)&&!session.results.some(e=>e.skill===id&&e.phase==='transfer');
  const recent=new Set(learning.events.filter(e=>e.skill===id).slice(-20).map(e=>e.signature));let spec;
- for(let i=0;i<24;i++){spec=application?K.transfer(C,id,tier):C.generate(id,tier);if(!recent.has(spec.signature))break;}
+ const lastForm=learning.events.filter(e=>e.skill===id).at(-1)?.form;
+ for(let i=0;i<24;i++){spec=application?K.transfer(C,id,tier):C.generate(id,tier);if(!recent.has(spec.signature)&&(i>=12||K.form(spec)!==lastForm))break;}
  if(session.kind==='exam'||(['daily','course'].includes(session.kind)&&session.index%3===2)){const imported=window.HanaExams?.select(learning,id,tier,{used:session.results.map(e=>e.sourceId).filter(Boolean),now});if(imported)spec=imported;}
  session.current={id:uid(),spec,tries:0,hints:0,entry:'',done:false,revealed:false,started:now,elapsed:0,activeMs:0,notes:{},strokes:[],answerStrokes:[],attempts:[],confidence:'unreported',phase:recall?'recall':application&&!spec.sourceId?'transfer':'practice',reviewGapMs:recall?gap:0,repeated:learning.events.some(e=>e.signature===spec.signature&&now-e.at<86400000)};
  lastTick=lastActivity=now;
@@ -242,7 +243,7 @@ function settle(independent,revealed,manual=false){
  const c=current();if(!c||c.done)return;
  tick();c.done=true;c.revealed=revealed;padLocked=true;
  c.feedback=manual?'Saved for a grown-up’s review.':revealed?'Let’s learn from this. '+c.spec.fact:independent?'You worked it out! '+c.spec.fact:c.confidence==='guess'?'You found the answer. Let’s check why it works. '+c.spec.fact:c.repeated?'A familiar question! Let’s try another one next. '+c.spec.fact:'You got there with help. '+c.spec.fact;
- const event={id:c.id,session:session.id,skill:c.spec.skill,year:c.spec.year,tier:c.spec.tier,at:Date.now(),independent:!!independent,correct:!revealed&&!manual,manual,lessonHelp:!!c.lessonHelp,hints:c.hints,tries:c.tries,revealed,elapsedMs:c.elapsed+Math.max(0,Date.now()-c.started),signature:c.spec.signature,question:c.spec.qtext,answer:c.spec.ans,notes:c.notes,strokes:c.strokes,attempts:c.attempts||[],confidence:c.confidence||'unreported',obstacle:c.obstacle||null,phase:c.phase||'practice',reviewGapMs:Math.max(0,Math.min(c.reviewGapMs||0,c.started-L.exposure(learning,c.spec.skill))),form:c.spec.form||K.form(c.spec),sourceId:c.spec.sourceId,sourcePaper:c.spec.sourcePaper,sourceQuestion:c.spec.sourceQuestion,sourcePage:c.spec.sourcePage,repeated:!!c.repeated,course:session.kind==='course',activeMs:c.activeMs??null,answerDisplay:answerText(),money:!!c.spec.money,updatedAt:Date.now()};
+ const event={id:c.id,session:session.id,skill:c.spec.skill,year:c.spec.year,tier:c.spec.tier,at:Date.now(),independent:!!independent,correct:!revealed&&!manual,manual,lessonHelp:!!c.lessonHelp,hints:c.hints,tries:c.tries,revealed,elapsedMs:c.elapsed+Math.max(0,Date.now()-c.started),signature:c.spec.signature,question:c.spec.qtext,answer:c.spec.ans,notes:c.notes,strokes:c.strokes,attempts:c.attempts||[],confidence:c.confidence||'unreported',obstacle:c.obstacle||null,phase:c.phase||'practice',reviewGapMs:Math.max(0,Math.min(c.reviewGapMs||0,c.started-L.exposure(learning,c.spec.skill))),form:c.spec.form||K.form(c.spec),family:c.spec.family,bankRevision:c.spec.bankRevision,sourceId:c.spec.sourceId,sourcePaper:c.spec.sourcePaper,sourceQuestion:c.spec.sourceQuestion,sourcePage:c.spec.sourcePage,repeated:!!c.repeated,course:session.kind==='course',activeMs:c.activeMs??null,answerDisplay:answerText(),money:!!c.spec.money,updatedAt:Date.now()};
  learning=L.merge(learning,{events:[event]});session.results.push(event);
  const nextEvidence=L.evidence(learning,c.spec.skill);
  // Offer two smaller foundation steps inside a daily session. Explicit focus
