@@ -42,6 +42,7 @@ function renderHome(){
  const rec=L.recommend(learning,C.skills,year);$('nextPlan').textContent=rec?`Next: ${rec.name}. ${rec.reason}`:'';
  if(session)$('resumeSession').textContent=`Continue P${session.year} · ${session.index+1}/${session.queue.length}`;
  $('startDaily').disabled=!ready;$('startCheckin').disabled=!ready;
+ window.HanaPlan?.renderHome();
 }
 function pause(){
  tick();saveDraft();running=false;stopAllAudio();clearTimeout(q.lookTimer);clearSigns();persist();renderHome();
@@ -50,9 +51,11 @@ function home(){pause();stopZap();stopRace();mode='home';renderBuddyHome();show(
 function start(kind='daily',focus=null){
  if(!ready)return;
  pause();stopZap();stopRace();
- const queue=L.plan(learning,C.skills,year,kind,focus);
+ let queue,sessionYear=year;
+ if(kind==='course'){const p=HanaCourse.plan(learning,C.skills);queue=p.queue;sessionYear=C.skills.find(s=>s.id===p.focus)?.year||C.skills.find(s=>s.id===queue[0])?.year||year;}
+ else queue=L.plan(learning,C.skills,year,kind,focus);
  if(!queue.length)return;
- session={id:uid(),year,kind,focus,repairs:{},queue,index:0,results:[],current:null,phase:'practice',taught:{},reteachFor:{}};
+ session={id:uid(),year:sessionYear,kind,focus,repairs:{},queue,index:0,results:[],current:null,phase:'practice',taught:{},reteachFor:{}};
  running=true;audio()?.resume?.().catch(()=>{});helloOnce();makeQuestion();
 }
 function makeQuestion(){
@@ -76,7 +79,7 @@ function renderCurrent(){
  running=true;mode='num';show('quiz');stopAllAudio();clearSigns();clearTimeout(q.lookTimer);
  // Copy the persisted question, never regenerate it on reopen or reload.
  const s=c.spec;
- Object.assign(q,{ans:s.ans,kind:s.kind,tries:c.tries,entry:c.entry||'',money:!!s.money,dec:!!s.dec,allowDot:!!s.money||!!s.dec,choiceDefs:s.choices||null,phrase:s.phrase,fact:s.fact,help:s.help,asked:Date.now(),revealed:c.revealed});
+ Object.assign(q,{ans:s.ans,ansText:s.ansText,kind:s.kind,tries:c.tries,entry:c.entry||'',money:!!s.money,dec:!!s.dec,allowDot:!!s.money||!!s.dec,choiceDefs:s.choices||null,phrase:s.phrase,fact:s.fact,help:s.help,asked:Date.now(),revealed:c.revealed});
  padLocked=c.done;
  $('skillBadge').textContent=`Primary ${s.year} · ${session.kind==='checkin'?'Starting point':s.topic}`;
  $('practicePhase').textContent=c.phase==='recall'?'Remember it · try before a reminder':c.phase==='transfer'?'Use the idea in a changed problem':'';
@@ -160,11 +163,12 @@ function answerUI(){
  // guard and visual/pointer locks for every answer type, including choices.
  padLocked=!!c.done;lockPads(padLocked);
  for(const id of ['kwrap','wwrap','pad'])$(id).style.display='none';
- $('answerForm').hidden=true;$('manualAnswer').hidden=true;$('inputControls').hidden=q.kind!=='key';
+ $('answerForm').hidden=true;$('partsForm').hidden=true;$('manualAnswer').hidden=true;$('inputControls').hidden=q.kind!=='key';
  if(q.kind==='manual'){
   $('manualAnswer').hidden=false;$('manualChecklist').textContent=c.spec.checklist;
   $('manualDone').disabled=c.done;return;
  }
+ if(q.kind==='parts'){renderParts(c);return;}
  if(q.kind==='choice'){
   legacyAnswerUI();
   $('pad').querySelectorAll('button').forEach((b,i)=>{b.disabled=c.done;if(c.done&&q.choiceDefs[i].v===q.ans)b.classList.add('right');});
@@ -185,15 +189,41 @@ function answerUI(){
  }
  }finally{savingDraft=oldSaving;}
 }
+// Typed fractions, compound units, remainders and 24-hour times. Blank or
+// malformed boxes get a prompt without counting as an attempt.
+function partsMarkup(spec){
+ const box=(k,label,cls='')=>`<input data-part="${k}" class="part-in ${cls}" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="6" aria-label="${esc(label)}">`,e=spec.expect||{};
+ if(spec.layout==='fraction'||spec.layout==='mixed')return `${box('w',spec.layout==='mixed'?'Whole number':'Whole number (leave empty if none)','part-whole')}<span class="frac-in">${box('n','Numerator (top)')}<span class="frac-line" aria-hidden="true"></span>${box('d','Denominator (bottom)')}</span><small class="parts-tip">${spec.layout==='mixed'?'Whole number, then the fraction':'Leave the big box empty if there is no whole number'}</small>`;
+ if(spec.layout==='units')return `${box('a',e.big)}<span class="part-unit">${esc(e.big)}</span>${box('b',e.small)}<span class="part-unit">${esc(e.small)}</span>`;
+ if(spec.layout==='remainder')return `${box('q','Quotient')}<span class="part-unit">R</span>${box('r','Remainder')}`;
+ if(spec.layout==='clock')return `${box('h','Hours, 24-hour clock','part-clock')}${box('m','Minutes','part-clock')}<small class="parts-tip">24-hour time, e.g. 0845 is 08 then 45</small>`;
+ return '';
+}
+function renderParts(c){
+ const spec=c.spec,host=$('partsFields');$('partsForm').hidden=false;
+ if(host.dataset.question!==c.id){host.innerHTML=partsMarkup(spec);host.dataset.question=c.id;}
+ const saved=readJSON(c.entry||'{}',{});
+ host.querySelectorAll('[data-part]').forEach(i=>{i.value=saved[i.dataset.part]??'';i.disabled=c.done;i.oninput=()=>{const v={};host.querySelectorAll('[data-part]').forEach(x=>v[x.dataset.part]=x.value.replace(/\D/g,'').slice(0,6));c.entry=q.entry=JSON.stringify(v);if(!savingDraft)persist();};});
+ $('partsForm').querySelector('button').disabled=c.done;
+ if(c.done){const b=$('blank');if(b)b.innerHTML=esc(spec.ansText);}
+}
+$('partsForm').onsubmit=e=>{
+ e.preventDefault();const c=current();if(padLocked||!c||c.done||c.spec.kind!=='parts')return;
+ const v={};$('partsFields').querySelectorAll('[data-part]').forEach(x=>v[x.dataset.part]=x.value.trim());
+ c.entry=q.entry=JSON.stringify(v);
+ const r=C.checkParts(c.spec,v);
+ if(!r.correct&&r.tag==='format'){$('quizSpeech').textContent=r.message;return;}
+ answer(r.correct,null,r.display,r.correct?null:{tag:r.tag,message:r.message});
+};
 function setInput(m){
  saveDraft();method=m==='write'&&!NET?'keyboard':m;
  const entry=current()?.entry||'';savingDraft=true;answerUI();q.entry=entry;renderEntry();savingDraft=false;persist();
 }
-function answer(correct,btn,response){
+function answer(correct,btn,response,override=null){
  const c=current();if(!running||session.phase==='lesson'||!c||c.done)return;
  audio()?.resume?.().catch(()=>{});tick();
- const value=response??(c.spec.kind==='key'?parseEntry():null),feedback=correct?null:K.feedback(c.spec,value);
- c.attempts||=[];if(c.attempts.length<30)c.attempts.push({id:uid(),at:Date.now(),response:value,display:c.spec.kind==='choice'?(c.spec.choices.find(o=>o.v===value)?.t||String(value)):q.entry,correct,feedback:feedback?.tag||null});
+ const value=response??(c.spec.kind==='key'?parseEntry():null),feedback=correct?null:(override||K.feedback(c.spec,value));
+ c.attempts||=[];if(c.attempts.length<30)c.attempts.push({id:uid(),at:Date.now(),response:value,display:c.spec.kind==='choice'?(c.spec.choices.find(o=>o.v===value)?.t||String(value)):c.spec.kind==='parts'?String(value):q.entry,correct,feedback:feedback?.tag||null});
  document.querySelectorAll('[data-confidence]').forEach(b=>b.disabled=true);
  if(correct){settle(!c.tries&&!c.hints&&!c.lessonHelp&&!c.repeated&&c.confidence!=='guess',false);if(btn)btn.classList.add('right');}
  else{
@@ -209,12 +239,12 @@ function settle(independent,revealed,manual=false){
  const c=current();if(!c||c.done)return;
  tick();c.done=true;c.revealed=revealed;padLocked=true;
  c.feedback=manual?'Saved for a grown-up’s review.':revealed?'Let’s learn from this. '+c.spec.fact:independent?'You worked it out! '+c.spec.fact:c.confidence==='guess'?'You found the answer. Let’s check why it works. '+c.spec.fact:c.repeated?'A familiar question! Let’s try another one next. '+c.spec.fact:'You got there with help. '+c.spec.fact;
- const event={id:c.id,session:session.id,skill:c.spec.skill,year:c.spec.year,tier:c.spec.tier,at:Date.now(),independent:!!independent,correct:!revealed&&!manual,manual,lessonHelp:!!c.lessonHelp,hints:c.hints,tries:c.tries,revealed,elapsedMs:c.elapsed+Math.max(0,Date.now()-c.started),signature:c.spec.signature,question:c.spec.qtext,answer:c.spec.ans,notes:c.notes,strokes:c.strokes,attempts:c.attempts||[],confidence:c.confidence||'unreported',obstacle:c.obstacle||null,phase:c.phase||'practice',reviewGapMs:Math.max(0,Math.min(c.reviewGapMs||0,c.started-L.exposure(learning,c.spec.skill))),form:K.form(c.spec),repeated:!!c.repeated,activeMs:c.activeMs??null,answerDisplay:answerText(),money:!!c.spec.money,updatedAt:Date.now()};
+ const event={id:c.id,session:session.id,skill:c.spec.skill,year:c.spec.year,tier:c.spec.tier,at:Date.now(),independent:!!independent,correct:!revealed&&!manual,manual,lessonHelp:!!c.lessonHelp,hints:c.hints,tries:c.tries,revealed,elapsedMs:c.elapsed+Math.max(0,Date.now()-c.started),signature:c.spec.signature,question:c.spec.qtext,answer:c.spec.ans,notes:c.notes,strokes:c.strokes,attempts:c.attempts||[],confidence:c.confidence||'unreported',obstacle:c.obstacle||null,phase:c.phase||'practice',reviewGapMs:Math.max(0,Math.min(c.reviewGapMs||0,c.started-L.exposure(learning,c.spec.skill))),form:K.form(c.spec),repeated:!!c.repeated,course:session.kind==='course',activeMs:c.activeMs??null,answerDisplay:answerText(),money:!!c.spec.money,updatedAt:Date.now()};
  learning=L.merge(learning,{events:[event]});session.results.push(event);
  const nextEvidence=L.evidence(learning,c.spec.skill);
  // Offer two smaller foundation steps inside a daily session. Explicit focus
  // and check-in sessions stay on the parent/learner's chosen path.
- if(session.kind==='daily'&&nextEvidence.reteach){
+ if((session.kind==='daily'||session.kind==='course')&&nextEvidence.reteach){
   const prerequisite=C.skills.find(s=>s.id===C.skills.find(s=>s.id===c.spec.skill)?.prerequisite&&s.year===session.year&&!s.manual);
   session.repairs||={};
   if(prerequisite&&!session.repairs[c.spec.skill]&&!L.evidence(learning,prerequisite.id).secure){
@@ -301,7 +331,7 @@ $('nextQuestion').onclick=next;$('hintButton').onclick=hint;$('revealButton').on
 $('manualDone').onclick=()=>settle(false,false,true);
 $('listenQuestion').onclick=()=>{if(soundOn&&ttsAllowed()){stopAllAudio();say(q.phrase);}};
 $('useKeyboard').onclick=()=>setInput('keyboard');$('useKeypad').onclick=()=>setInput('pad');$('useWriting').onclick=()=>setInput('write');
-$('dockHome').onclick=home;$('summaryHome').onclick=home;$('summaryAgain').onclick=()=>start('daily');
+$('dockHome').onclick=home;$('summaryHome').onclick=home;$('summaryAgain').onclick=()=>start(session?.kind==='course'?'course':'daily');
 $('dockMap').onclick=()=>openDialog('mapDialog','dockMap');$('dockThink').onclick=()=>openDialog('thinkDialog','dockThink');$('dockMore').onclick=()=>openDialog('moreDialog','dockMore');
 for(const [id,trigger] of [['thinkDialog','dockThink'],['mapDialog','dockMap'],['moreDialog','dockMore']]){
  $(id).querySelector('[data-close]').onclick=()=>$(id).close();
@@ -325,7 +355,7 @@ $('scratchClear').onclick=()=>{if(running&&current()){current().strokes=[];commi
 window.addEventListener('resize',()=>{if($('thinkDialog').open)drawScratch();});
 document.addEventListener('visibilitychange',()=>{tick();if(document.hidden){saveDraft();stopAllAudio();}});
 window.addEventListener('pagehide',()=>{tick();saveDraft();});
-window.HanaStudio={active:()=>running&&session?.phase!=='lesson'&&!!current(),renderCurrent,answer,answerUI,setInput,hint,pause,saveDraft,renderReport,reload,getYear:()=>year,getLearning:()=>learning,mergeLearning:async other=>{await saveChain.catch(()=>{});const local=readJSON(await store.get('hq_learning'),{});learning=L.merge(L.merge(local,learning),other);await store.set('hq_learning',JSON.stringify(learning));renderHome();changed();},start,getSession:()=>session};
+window.HanaStudio={partsMarkup,ready:()=>ready,active:()=>running&&session?.phase!=='lesson'&&!!current(),renderCurrent,answer,answerUI,setInput,hint,pause,saveDraft,renderReport,reload,getYear:()=>year,getLearning:()=>learning,mergeLearning:async other=>{await saveChain.catch(()=>{});const local=readJSON(await store.get('hq_learning'),{});learning=L.merge(L.merge(local,learning),other);await store.set('hq_learning',JSON.stringify(learning));renderHome();changed();},start,getSession:()=>session};
 $('startDaily').disabled=true;$('startCheckin').disabled=true;
 Promise.resolve(window.hanaBoot).then(reload).then(()=>{ready=true;renderHome();}).catch(()=>{ready=true;renderHome();});
 })();

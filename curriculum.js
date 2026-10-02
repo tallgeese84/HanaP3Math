@@ -18,7 +18,50 @@ const rect=(w,h,labels=true)=>{const width=w===h?110:230,x=(360-width)/2;return 
 const bar=(values,labels)=>svg(values.map((v,i)=>`<rect x="60" y="${20+i*48}" width="${v}" height="30" fill="${i?'#d7c0f3':'#b3decb'}" stroke="#7850aa"/>${txt(28,42+i*48,labels[i])}`).join(''),360,125);
 function num(prompt,ans,help,vis='',unit=''){return {qtext:prompt,ans,kind:'key',help,vis,unit,eq:blank+(unit?' '+unit:''),fact:`${ans}${unit?' '+unit:''}. ${help}`,phrase:prompt};}
 function choice(prompt,ans,options,help,vis=''){return {qtext:prompt,ans,kind:'choice',choices:[...new Set(options)].map(v=>({v,t:esc(v)})),help,vis,fact:`${ans}. ${help}`,phrase:prompt};}
-function fracAnswer(prompt,n,d,help){const a=f(n,d),options=[a,...[1,2,-1,3].map(k=>f(Math.max(0,n+k),d))];return choice(prompt,a,options,help);}
+function fracAnswer(prompt,n,d,help){const g=gcd(n,d),N=n/g,D=d/g;return parts(prompt,'fraction',mixedText(N,D),{N,D,form:'simplest'},help);}
+// Typed multi-part answers: fractions, mixed numbers, compound units, remainders and 24-hour time.
+function parts(prompt,layout,ansText,expect,help,vis=''){return {qtext:prompt,ans:ansText,ansText,kind:'parts',layout,expect,help,vis,eq:blank,fact:`${ansText}. ${help}`,phrase:prompt};}
+function mixedText(N,D){const g=gcd(N,D);N/=g;D/=g;const w=Math.floor(N/D),r=N%D;return r?(w?`${w} ${r}/${D}`:`${r}/${D}`):String(w);}
+function checkParts(spec,values){
+ const raw=k=>String(values?.[k]??'').trim(),num=k=>raw(k)===''?null:(/^\d{1,6}$/.test(raw(k))?parseInt(raw(k),10):NaN);
+ const e=spec.expect||{},bad=(message,tag='format')=>({correct:false,tag,message,display:display()});
+ function display(){
+  if(spec.layout==='fraction'||spec.layout==='mixed'){const w=raw('w'),n=raw('n'),d=raw('d');return [w,n&&d?`${n}/${d}`:n||d?`${n||'?'}/${d||'?'}`:''].filter(Boolean).join(' ')||'(blank)';}
+  if(spec.layout==='units')return `${raw('a')||'?'} ${e.big} ${raw('b')||'?'} ${e.small}`;
+  if(spec.layout==='remainder')return `${raw('q')||'?'} R ${raw('r')||'?'}`;
+  if(spec.layout==='clock')return `${raw('h').padStart(2,'0')}${raw('m').padStart(2,'0')}`;
+  return '';
+ }
+ if(spec.layout==='fraction'||spec.layout==='mixed'){
+  const w=num('w'),n=num('n'),d=num('d');
+  if([w,n,d].some(Number.isNaN))return bad('Use whole numbers in each box.');
+  if((n===null)!==(d===null))return bad('A fraction needs both a top number and a bottom number.');
+  if(w===null&&n===null)return bad('Type your answer in the boxes.');
+  if(d===0)return bad('The bottom number of a fraction cannot be 0.');
+  const top=(w||0)*(d||1)+(n||0),bottom=d||1;
+  if(top*e.D!==e.N*bottom)return {correct:false,tag:'fraction-value',message:'Not quite. Check what counts as one whole, and use a shared denominator.',display:display()};
+  if(n!==null&&gcd(n,d)>1)return bad('That is equal to the answer! Now write it in simplest form.','form-simplest');
+  if(spec.layout==='mixed'&&e.N>e.D&&(n!==null&&n>=d||!w))return bad('That is equal! Write it as a mixed number: a whole number and a proper fraction.','form-mixed');
+  if(n!==null&&n>=d&&w)return bad('The fraction part should be less than 1. Move whole ones into the whole-number box.','form-mixed');
+  return {correct:true,display:display()};
+ }
+ if(spec.layout==='units'){
+  const a=num('a'),b=num('b');if([a,b].some(v=>v===null||Number.isNaN(v)))return bad(`Fill in both boxes: ${e.big} and ${e.small}.`);
+  if(b>=e.k)return bad(`${e.k} ${e.small} make 1 ${e.big}. Regroup so the ${e.small} part is less than ${e.k}.`,'units-regroup');
+  return a===e.a&&b===e.b?{correct:true,display:display()}:{correct:false,tag:'units-value',message:`Make groups of ${e.k} ${e.small}. Each group is 1 ${e.big}.`,display:display()};
+ }
+ if(spec.layout==='remainder'){
+  const q=num('q'),r=num('r');if([q,r].some(v=>v===null||Number.isNaN(v)))return bad('Fill in the quotient and the remainder.');
+  if(r>=e.divisor)return bad(`The remainder must be less than ${e.divisor}. Make one more group.`,'remainder-size');
+  return q===e.q&&r===e.r?{correct:true,display:display()}:{correct:false,tag:'remainder-value',message:'Check by multiplying: quotient × divisor + remainder should give the number you started with.',display:display()};
+ }
+ if(spec.layout==='clock'){
+  const h=num('h'),m=num('m');if([h,m].some(v=>v===null||Number.isNaN(v)))return bad('Fill in the hours and the minutes.');
+  if(h>23||m>59)return bad('24-hour time runs from 0000 to 2359. Minutes go up to 59.','clock-format');
+  return h===e.h&&m===e.m?{correct:true,display:display()}:{correct:false,tag:'time-value',message:'Try a timeline. Remember that 60 minutes make 1 hour.',display:display()};
+ }
+ return bad('This answer type is not supported.');
+}
 function context(random){return {int:(a,b)=>a+Math.floor(random()*(b-a+1)),pick:a=>a[Math.floor(random()*a.length)],random};}
 const numberWords=n=>{
  const one=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
@@ -60,7 +103,7 @@ function operation(c,year,t,divide=false){
 skill('p3-muldiv',3,'Operations','Multiply & divide up to 3 digits',(c,t)=>operation(c,3,t,c.random()<.5),'p3-tables');
 for(const year of [3,4]) skill(`p${year}-remainder`,year,'Operations','Division with remainders',(c,t)=>{
  const b=c.int(2,t===1?5:9),a=c.int(12,year===3?[0,49,199,999][t]:[0,99,999,9999][t]),r=a%b,quo=Math.floor(a/b),ans=`${quo} R ${r}`;
- return choice(`${a} ÷ ${b}: give quotient R remainder.`,ans,[ans,`${quo+1} R ${r}`,`${quo} R ${r+1}`,`${quo-1} R ${r}`],`Find full groups of ${b}. The remainder must be less than ${b}.`);
+ return parts(`${a} ÷ ${b} = ? Give the quotient and the remainder.`,'remainder',ans,{q:quo,r,divisor:b},`Find full groups of ${b}. The remainder must be less than ${b}.`);
 },year===4?'p3-remainder':'p3-tables');
 skill('p3-equivalent',3,'Fractions','Equivalent & simplest fractions',(c,t)=>{
  const d=c.pick(t===1?[2,3]:t===2?[2,3,4]:[2,3,4,6]),n=c.int(1,d-1),k=c.int(2,Math.floor(12/d));
@@ -76,6 +119,7 @@ function fracCalc(c,year,t){
  // P3 related denominators and total within one whole; P4 at most two denominators, each ≤12.
  for(let i=0;i<100;i++){
  d=c.pick(t===1?[2,3,4]:t===2?[2,3,4,6]:year===3?[4,6]:[5,6,8,10,12]);e=t===1?d:year===3?d*c.int(t===3?2:1,Math.floor(12/d)):c.int(2,t===2?6:12);n=c.int(1,d-1);m=c.int(1,e-1);add=c.random()<.5;
+ if(gcd(n,d)!==1||gcd(m,e)!==1||n*e===m*d)continue;
  if(!add||year===4||n*e+m*d<=d*e)break;
  }
  if(!add&&n*e<m*d){[n,m]=[m,n];[d,e]=[e,d];}
@@ -93,16 +137,16 @@ skill('p3-measure',3,'Everyday maths','Length, mass & capacity',(c,t)=>{
  const [a,b,k]=c.pick([['km','m',1000],['m','cm',100],['kg','g',1000],['ℓ','ml',1000]]),w=c.int(1,8),r=c.int(1,k-1);
  if(t===1)return num(`Convert ${w} ${a} to ${b}.`,w*k,`1 ${a} = ${k} ${b}. Multiply by ${k}.`,'',b);
  if(t===2)return num(`Convert ${w} ${a} ${r} ${b} to ${b}.`,w*k+r,`1 ${a} = ${k} ${b}. Convert the larger units, then add.`, '',b);
- const ans=`${w} ${a} ${r} ${b}`;return choice(`Write ${w*k+r} ${b} in compound units.`,ans,[ans,`${w} ${a} ${r+1} ${b}`,`${w+1} ${a} ${r} ${b}`,`${w-1} ${a} ${r} ${b}`],`Make groups of ${k}; keep the remaining ${b}.`);
+ const ans=`${w} ${a} ${r} ${b}`;return parts(`Write ${w*k+r} ${b} in compound units.`,'units',ans,{a:w,b:r,k,big:a,small:b},`Make groups of ${k}; keep the remaining ${b}.`);
 });
 const clock=n=>`${String(Math.floor(n/60)%24).padStart(2,'0')}${String(n%60).padStart(2,'0')}`;
 skill('p3-time',3,'Everyday maths','Time, seconds & 24-hour clock',(c,t)=>{
  const type=t===1?c.int(0,1):t===2?2:c.int(3,4),start=c.int(420,1000),dur=c.int(15,120);
- if(type===0){const h=c.int(1,11),pm=c.random()<.5,m=c.int(0,59),ans=clock((h+(pm?12:0))*60+m);return choice(`Write ${h}:${String(m).padStart(2,'0')} ${pm?'pm':'am'} in 24-hour time.`,ans,[ans,clock((h+(pm?0:12))*60+m),clock((h+(pm?12:0))*60+(m+5)%60)],'In the afternoon add 12 to the hour. Keep the minutes unchanged.');}
+ if(type===0){const h=c.int(1,11),pm=c.random()<.5,m=c.int(0,59),ans=clock((h+(pm?12:0))*60+m);return parts(`Write ${h}:${String(m).padStart(2,'0')} ${pm?'pm':'am'} in 24-hour time.`,'clock',ans,{h:h+(pm?12:0),m},'In the afternoon add 12 to the hour. Keep the minutes unchanged.');}
  if(type===1){const m=c.int(1,5),s=c.int(1,59);return num(`How many seconds are in ${m} min ${s} s?`,m*60+s,'Each minute contains 60 seconds.','','s');}
  if(type===2)return num(`An activity starts at ${clock(start)} and ends at ${clock(start+dur)}. How many minutes does it last?`,dur,'Count to the next hour, then count the remaining minutes.','','min');
  const end=type===3,ans=clock(end?start+dur:start);
- return choice(end?`A bus leaves at ${clock(start)}. The trip takes ${dur} minutes. When does it arrive?`:`A lesson ends at ${clock(start+dur)} and lasts ${dur} minutes. When did it start?`,ans,[ans,clock((end?start+dur:start)+60),clock((end?start+dur:start)-10),clock((end?start+dur:start)+10)],end?'Add the minutes, exchanging 60 minutes for one hour.':'Count backwards by the duration.');
+ const at=end?start+dur:start;return parts(end?`A bus leaves at ${clock(start)}. The trip takes ${dur} minutes. When does it arrive? Use 24-hour time.`:`A lesson ends at ${clock(start+dur)} and lasts ${dur} minutes. When did it start? Use 24-hour time.`,'clock',ans,{h:Math.floor(at/60)%24,m:at%60},end?'Add the minutes, exchanging 60 minutes for one hour.':'Count backwards by the duration.');
 });
 skill('p3-area',3,'Geometry','Area & perimeter',(c,t)=>{
  const w=c.int(3,t===1?6:12),h=c.int(2,t===1?5:10),area=c.random()<.5;
@@ -159,10 +203,10 @@ skill('p4-divide',4,'Operations','Divide up to 4 digits',(c,t)=>operation(c,4,t,
 skill('p4-mixed',4,'Fractions','Mixed & improper fractions',(c,t)=>{
  const d=c.int(2,t===3?12:5),n=c.int(1,d-1),w=c.int(1,t===1?2:5),ans=`${w} ${f(n,d)}`;
  if(t===1)return num(`Write ${w} ${n}/${d} as ?/${d}. What is the numerator?`,w*d+n,'Multiply the whole number by the denominator, then add the numerator.');
- return choice(`Write ${w*d+n}/${d} as a mixed number in simplest form.`,ans,[ans,`${w+1} ${f(n,d)}`,`${w-1} ${f(n,d)}`],'Divide the numerator by the denominator. The remainder is the fractional part.');
+ return parts(`Write ${w*d+n}/${d} as a mixed number in simplest form.`,'mixed',mixedText(w*d+n,d),{N:(w*d+n)/gcd(w*d+n,d),D:d/gcd(w*d+n,d),form:'mixed'},'Divide the numerator by the denominator. The remainder is the fractional part.');
 },'p3-equivalent');
 skill('p4-fracset',4,'Fractions','Fractions of a set',(c,t)=>{
- const d=c.int(2,t===1?5:12),n=t===1?1:c.int(1,d-1),k=c.int(2,12);
+ const d=c.int(2,t===1?5:12),n=t===1?1:(()=>{let v;do{v=c.int(1,d-1);}while(gcd(v,d)!==1);return v;})(),k=c.int(2,12);
  if(t===3)return num(`${n*k} blue beads make up ${n}/${d} of all the beads. How many beads are there altogether?`,d*k,`First divide ${n*k} by ${n} to find one group. Multiply that group by ${d}.`,'','beads');
  return num(`There are ${d*k} beads. ${n}/${d} of them are blue. How many beads are blue?`,n*k,`Share the whole set into ${d} equal groups, then take ${n} groups.`,'','beads');
 },'p3-muldiv');
@@ -272,6 +316,6 @@ function generate(id,tier=1,random=Math.random){
  if(q.choices)for(let i=q.choices.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[q.choices[i],q.choices[j]]=[q.choices[j],q.choices[i]];}
  q.signature=id+'|'+q.qtext+'|'+q.ans;return q;
 }
-const api={skills,generate,esc};
+const api={skills,generate,esc,checkParts,mixedText,gcd};
 if(typeof module==='object'&&module.exports)module.exports=api;else root.HanaCurriculum=api;
 })(typeof window==='undefined'?globalThis:window);

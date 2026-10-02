@@ -10,7 +10,7 @@ test('all skills generate valid, unique answers across three tiers and 300 seeds
   if(q.kind==='choice'){
    assert.ok(q.choices.length>=2);assert.equal(q.choices.filter(c=>c.v===q.ans).length,1);
    assert.equal(new Set(q.choices.map(c=>c.v)).size,q.choices.length);
-   if(s.id==='p3-remainder')positions.add(q.choices.findIndex(c=>c.v===q.ans));
+   if(s.id==='p3-fraccompare')positions.add(q.choices.findIndex(c=>c.v===q.ans));
   }
   if(q.kind==='manual')assert.equal(s.manual,true);
  }
@@ -29,8 +29,13 @@ test('fraction items have one mathematically correct option, and P3 uses related
   const q=C.generate(`p${year}-fracops`,2,random(i));
   const [,a,b,op,c,d]=q.qtext.match(/(\d+)\/(\d+) ([+−]) (\d+)\/(\d+)/);
   const expected=+a/+b+(op==='+'?1:-1)*(+c/+d);
-  const accepted=q.choices.filter(o=>{const [n,d]=o.v.split('/').map(Number);return Math.abs(n/d-expected)<1e-10;});
-  assert.equal(accepted.length,1);assert.equal(accepted[0].v,q.ans);assert.ok(+b<=12&&+d<=12);
+   // Typed answers (h17): the stored simplest fraction equals the independent value,
+  // and the checker accepts it but asks for simplest form when it is not.
+  assert.equal(q.kind,'parts');assert.ok(Math.abs(q.expect.N/q.expect.D-expected)<1e-10);assert.equal(C.gcd(q.expect.N,q.expect.D),1);
+  const w=Math.floor(q.expect.N/q.expect.D),r=q.expect.N%q.expect.D;
+  assert.equal(C.checkParts(q,r?{w:w||'',n:r,d:q.expect.D}:{w}).correct,true);
+  if(r)assert.equal(C.checkParts(q,{w:w||'',n:r*2,d:q.expect.D*2}).tag,'form-simplest');
+  assert.ok(expected>0);assert.ok(+b<=12&&+d<=12);
   if(year===3){assert.ok(+b % +d===0||+d % +b===0);assert.ok(expected<=1+1e-10&&expected>=0);}
  }
 });
@@ -67,7 +72,7 @@ test('cloud evidence merges by stable event identity and preserves local data fr
  const a={id:'a',skill:'p3-addsub',tier:1,at:1,independent:true},b={...a,id:'b',at:2};
  assert.deepEqual(L.merge({events:[a]},{events:[a,b]}).events,[a,b]);
  assert.deepEqual(L.merge({events:[a]},{}).events,[a]);
- assert.deepEqual(L.merge(null,null),{version:3,events:[],lessons:{},checks:[],exposures:{}});
+ assert.deepEqual(L.merge(null,null),{version:3,events:[],lessons:{},checks:[],exposures:{},papers:[],course:null});
 });
 test('failed or supported work becomes due after one day, independent work after two',()=>{
  const now=Date.now(),e={id:'a',skill:'p3-addsub',tier:1,at:now-86400001,independent:false};

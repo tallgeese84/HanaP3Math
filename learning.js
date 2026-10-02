@@ -7,7 +7,10 @@ function clean(value){
  for(const [id,v] of Object.entries(value?.lessons||{}))if(/^p[34]-[a-z]+$/.test(id)&&v&&Number.isFinite(v.at))lessons[id]={at:v.at,passed:!!v.passed,tries:Math.max(0,Math.min(99,Number(v.tries)||0))};
  for(const [id,at] of Object.entries(value?.exposures||{}))if(/^p[34]-[a-z]+$/.test(id)&&Number.isFinite(at))exposures[id]=at;
  const checks=(Array.isArray(value?.checks)?value.checks:[]).filter(e=>e&&typeof e.id==='string'&&/^p[34]-[a-z]+$/.test(e.skill)&&Number.isFinite(e.at)).slice(-2000);
- return {version:3,events:events.filter(e=>e&&typeof e.id==='string'&&typeof e.skill==='string'&&Number.isFinite(e.at)&&[1,2,3].includes(e.tier)).slice(-5000),lessons,checks,exposures};
+ // Checkpoint papers and the course plan travel with learning evidence (h17).
+ const papers=(Array.isArray(value?.papers)?value.papers:[]).filter(p=>p&&typeof p.id==='string'&&Number.isFinite(p.at)&&Array.isArray(p.items)).sort((a,b)=>a.at-b.at).slice(-200);
+ const course=value?.course&&typeof value.course==='object'&&Number.isFinite(value.course.updatedAt)?value.course:null;
+ return {version:3,events:events.filter(e=>e&&typeof e.id==='string'&&typeof e.skill==='string'&&Number.isFinite(e.at)&&[1,2,3].includes(e.tier)).slice(-5000),lessons,checks,exposures,papers,course};
 }
 function merge(a,b){
  a=clean(a);b=clean(b);const seen=new Map(),lessons={...a.lessons},exposures={...a.exposures};
@@ -15,7 +18,9 @@ function merge(a,b){
  for(const [id,v] of Object.entries(b.lessons))if(!lessons[id]||v.at>lessons[id].at)lessons[id]=v;
  for(const [id,at] of Object.entries(b.exposures))exposures[id]=Math.max(exposures[id]||0,at);
  const checks=new Map();for(const c of [...a.checks,...b.checks])if(!checks.has(c.id))checks.set(c.id,c);
- return clean({events:[...seen.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),lessons,exposures,checks:[...checks.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id))});
+ const papers=new Map();for(const p of [...a.papers,...b.papers])if(!papers.has(p.id)||(p.updatedAt||p.at)>(papers.get(p.id).updatedAt||papers.get(p.id).at))papers.set(p.id,p);
+ const course=!a.course?b.course:!b.course?a.course:(b.course.updatedAt>a.course.updatedAt?b.course:a.course);
+ return clean({events:[...seen.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),lessons,exposures,checks:[...checks.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),papers:[...papers.values()],course});
 }
 // Never trust an independent flag when recorded support contradicts it.
 const independent=e=>!!e.independent&&!e.manual&&!e.hints&&!e.tries&&!e.revealed&&!e.lessonHelp&&!e.repeated&&e.confidence!=='guess'&&e.correct!==false;

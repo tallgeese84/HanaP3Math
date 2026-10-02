@@ -616,12 +616,15 @@
     .choices button{ font-size:20px; }
   }
 </style>
-<link rel="stylesheet" href="studio.css?v=h16">
-<script src="curriculum.js?v=h16"></script>
-<script src="learning.js?v=h16"></script>
-<script src="lessons.js?v=h16"></script>
-<script src="coach.js?v=h16"></script>
-<script src="learning-review.js?v=h16"></script>
+<link rel="stylesheet" href="studio.css?v=h17">
+<script src="curriculum.js?v=h17"></script>
+<script src="learning.js?v=h17"></script>
+<script src="lessons.js?v=h17"></script>
+<script src="coach.js?v=h17"></script>
+<script src="learning-review.js?v=h17"></script>
+<script src="problems.js?v=h17"></script>
+<script src="course.js?v=h17"></script>
+<script src="papers.js?v=h17"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -772,6 +775,7 @@
     <div class="reflection-row" id="confidenceRow" role="group" aria-label="How do you feel about this answer?"><span>Before I answer (optional):</span><button data-confidence="sure" aria-pressed="false">I can explain it</button><button data-confidence="unsure" aria-pressed="false">Not sure yet</button><button data-confidence="guess" aria-pressed="false">I’m guessing</button></div>
       <div class="input-controls" id="inputControls"><span>Work your way</span><button class="btn" id="useKeyboard">Keyboard</button><button class="btn" id="useKeypad">Keypad</button><button class="btn" id="useWriting">Stylus</button></div>
       <form id="answerForm" class="answer-form" hidden><label for="typedAnswer" id="answerPrefix"></label><input id="typedAnswer" inputmode="numeric" autocomplete="off" aria-label="Your answer" placeholder="Your answer…"><button class="btn primary" type="submit">Check answer →</button></form>
+      <form id="partsForm" class="parts-form" hidden novalidate><div id="partsFields" class="parts-fields"></div><button class="btn primary" type="submit">Check answer →</button></form>
       <div id="manualAnswer" hidden><p id="manualChecklist"></p><button class="btn" id="manualDone">Save for grown-up review</button></div>
       <div class="choices" id="pad" style="display:none"></div>
       <div class="kwrap" id="kwrap" style="display:none">
@@ -931,7 +935,7 @@
      2. add a line to CHANGELOG.md saying what changed
    The version shows under the title and in ☁️ → Check build.
    ============================================================ */
-const APP_VERSION = 'h16';
+const APP_VERSION = 'h17';
 /* ============================================================
    PokéMath Quest — Hana · Singapore MOE Primary 3 maths
    Numbers to 10 000 · Add & Subtract · Multiply & Divide
@@ -3316,6 +3320,7 @@ function choiceTap(v, btn){
   resolveAnswer(v === q.ans, btn, v);
 }
 function answerText(){
+  if (q.kind === 'parts') return q.ansText || String(q.ans);
   if (q.kind === 'choice'){
     const c = (q.choiceDefs || []).find(c => c.v === q.ans);
     return c ? c.t : String(q.ans);
@@ -4063,8 +4068,9 @@ document.getElementById('buildTag').textContent = 'build ' + APP_VERSION;
 renderSoundButton();document.getElementById('cloudBtn').textContent='⋯';document.getElementById('cloudBtn').setAttribute('aria-label','Grown-up settings');
 window.hanaBoot = loadStars();
 </script>
-<script src="studio.js?v=h16"></script>
-<script src="progress.js?v=h16"></script>
-<script src="drive-mirror.js?v=h16"></script>
+<script src="studio.js?v=h17"></script>
+<script src="progress.js?v=h17"></script>
+<script src="drive-mirror.js?v=h17"></script>
+<script src="plan-ui.js?v=h17"></script>
 </body>
 </html>
