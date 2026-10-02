@@ -1,3 +1,11 @@
+# h19 — broader exam-style questions in everyday practice
+
+- Add 29 original, parameterised families across 37 existing P3/P4 skills. Questions include inverse relationships, multi-step money, fractions, decimals, rounding bounds, joined figures and data interpretation.
+- Keep level 1 foundations; mix new structures into levels 2–3 and same-level applications. Avoid repeating a form consecutively when another is available.
+- Give worked solutions and specific retry prompts for recognised mistakes. Record family/version in progress and checkpoint reports.
+- Preserve essential question diagrams in checkpoints. Retain private exam imports, family audio, progress and sync identity.
+- Validate all new families with independent arithmetic/constraint checks and every new answer flow in an isolated DOM profile.
+
 # h18 — private exam packs and assessment review
 
 - Import private P3/P4 paper packs, read original pages, and practise verified questions with adaptive difficulty, family audio, source references and normal progress reporting.

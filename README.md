@@ -1,6 +1,6 @@
 # Hana’s Maths Studio — Singapore P3 & P4
 
-A personal maths app for Hana. **Build h18** prepares Hana, who is in a US Grade 3 class, to join a Singapore Primary 4 class in June 2027 (see *Road to Singapore P4* below). Build h15 adds Euna-style evidence, feedback and parent review: actual submitted answers, optional confidence, targeted retry prompts, changed application problems, delayed recall and clear next-step recommendations. The h14 answer-button fix remains. It retains Euna’s Mochi-style layout, visual mini-lessons and adaptive practice, with one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
+A personal maths app for Hana. **Build h19** prepares Hana, who is in a US Grade 3 class, to join a Singapore Primary 4 class in June 2027 (see *Road to Singapore P4* below). Build h15 adds Euna-style evidence, feedback and parent review: actual submitted answers, optional confidence, targeted retry prompts, changed application problems, delayed recall and clear next-step recommendations. The h14 answer-button fix remains. It retains Euna’s Mochi-style layout, visual mini-lessons and adaptive practice, with one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
 
 [Open the app](https://tallgeese84.github.io/HanaP3Math/)
 
@@ -20,6 +20,12 @@ A personal maths app for Hana. **Build h18** prepares Hana, who is in a US Grade
 - Select **Next question** when ready; solutions no longer disappear on a timer.
 
 The curriculum uses the [Singapore MOE 2021 Mathematics Syllabus, October 2025 update](https://www.moe.gov.sg/api/media/92bff26d-b2b4-4535-b868-b8415c744b91/2021-Primary-Mathematics-Syllabus-P1-to-P6-Updated-October-2025.pdf), pages 35–40. See [the review and scope notes](docs/CURRICULUM_REVIEW.md). Built-in questions are original; optional private packs contain the family’s supplied examination questions. This app supplements classroom teaching and practical measurement/construction.
+
+## Broader exam-style practice (h19)
+
+Normal practice and checkpoints now include 29 original question families across 37 existing skills, informed by the reviewed P3/P4 papers. These are generated locally, automatically checked and available without importing files. They add reverse problems, linked relationships, constrained answers, remainder decisions, fraction/decimal reasoning and diagrams with worked solutions.
+
+Level 1 keeps foundations. Levels 2–3 mix the richer questions with familiar calculation practice; the existing adaptive rules still lower the level and revisit prerequisites when help is needed. Reports retain the question family and bank version for later analysis. The 62 family audio clips and existing progress are preserved. See [question bank scope and validation](docs/H19_QUESTION_BANK.md).
 
 ## Private exam papers (h18)
 

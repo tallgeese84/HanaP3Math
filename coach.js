@@ -2,6 +2,7 @@
 (function(root){
 'use strict';
 const forms={};
+const applications={};
 const add=(ids,make)=>ids.split(' ').forEach(id=>forms[id]=make);
 const integer=(r,a,b)=>a+Math.floor(r()*(b-a+1));
 function n(qtext,ans,help,unit=''){return {qtext,ans,help,unit,kind:'key',eq:'<span class="blank" id="blank">?</span>'+(' '+unit),fact:`${ans}${unit?' '+unit:''}. ${help}`,phrase:qtext,vis:''};}
@@ -21,12 +22,15 @@ add('p4-round',(r,t)=>{const unit=[0,10,100,1000][t],value=integer(r,11,89)*unit
 add('p4-fracset',(r,t)=>{const d=integer(r,3,[0,4,6,9][t]),k=integer(r,2,[0,3,6,9][t]);return n(`A box has ${d*k} beads. 1/${d} of them are blue and all the rest are red. How many beads are red?`,(d-1)*k,'Find the blue beads first, then subtract them from the whole set.','beads');});
 add('p4-decimalops',(r,t)=>{const a=integer(r,120,[0,199,350,999][t]),b=integer(r,30,[0,50,90,399][t]),q=n(`A bottle held some water. After ${ (b/100).toFixed(2)} litres were poured out, ${(a/100).toFixed(2)} litres remained. How many litres were in the bottle at first?`,(a+b)/100,'Add the poured amount back to the remainder. Align decimal points.','litres');q.dec=true;return q;});
 function transfer(C,id,tier,random=Math.random){
+ const richer=tier>=2&&applications[id]?.(random,tier);if(richer)return richer;
  if(!forms[id])return null;const skill=C.skills.find(s=>s.id===id),q=forms[id](random,tier,id);
  return {...q,skill:id,year:skill.year,topic:skill.topic,title:skill.name,tier,form:id+':application',signature:id+'|'+q.qtext+'|'+q.ans};
 }
 function form(q){return q.form||q.skill+':'+q.qtext.replace(/\d+(?:\.\d+)?/g,'#').replace(/\s+/g,' ').slice(0,180);}
 function feedback(q,response){
  const value=typeof response==='number'?response:Number(response),a=Number(q.ans);
+ const slip=q.misconceptions?.find(s=>Number.isFinite(s.value)&&Math.abs(s.value-value)<1e-6);
+ if(slip)return {tag:slip.tag,message:slip.message};
  if(/place/.test(q.skill)&&a>0&&(value===a*10||value===a/10))return {tag:'place-value',message:'Check which place the digit is in. One place to the left is ten times as much.'};
  if(q.money&&value===a*100)return {tag:'money-units',message:'Check dollars and cents. The answer box is in dollars; 100 cents makes $1.'};
  if(/frac/.test(q.skill)||q.skill.includes('equivalent'))return {tag:'fraction-check',message:'Check what counts as one whole, and whether the pieces are equal. Try a bar model.'};
@@ -35,6 +39,6 @@ function feedback(q,response){
  if(/bars|tables$|linegraphs|piecharts/.test(q.skill)&&q.topic==='Data')return {tag:'read-data',message:'Read the labels and scale first. Then decide whether to read, add or compare amounts.'};
  return {tag:'check-method',message:'Check what you need to find. You can draw a model, check each step, or open the lesson.'};
 }
-const api={transfer,hasTransfer:id=>!!forms[id],transferSkills:Object.keys(forms),form,feedback};
+const api={transfer,hasTransfer:(id,tier=1)=>!!forms[id]||(tier>=2&&!!applications[id]),registerApplication:(id,make)=>{applications[id]=make;},transferSkills:Object.keys(forms),form,feedback};
 if(typeof module==='object'&&module.exports)module.exports=api;else root.HanaCoach=api;
 })(typeof window==='undefined'?globalThis:window);

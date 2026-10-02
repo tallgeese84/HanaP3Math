@@ -1,11 +1,21 @@
-// UI flow test in jsdom (no browser download needed). Run with a static server:
-//   python3 -m http.server 8765 & node tests/jsdom-flow.cjs
-// Requires: npm install --no-save jsdom
+// UI flow test in jsdom (no browser download needed). Runs its own local server;
+// APP_URL can optionally point to an already running preview.
 const {JSDOM,VirtualConsole}=require('jsdom'),assert=require('node:assert/strict');
-const BASE=process.env.APP_URL||'http://localhost:8765/index.html';
+const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+let BASE=process.env.APP_URL;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date.now()-t<ms){try{const v=fn();if(v)return v;}catch{}await sleep(25);}throw new Error('Timed out: '+label);}
 (async()=>{
+ if(!BASE){
+  const root=path.resolve(__dirname,'..');
+  const server=http.createServer((req,res)=>{
+   const file=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]==='/'?'/index.html':req.url.split('?')[0]));
+   if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}
+   res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.html')?'text/html':'application/octet-stream');
+   fs.createReadStream(file).on('error',()=>res.writeHead(404).end()).pipe(res);
+  });
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));BASE=`http://127.0.0.1:${server.address().port}/index.html`;
+ }
  const errors=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>{if(!/Not implemented|getContext|scrollTo|HTMLMediaElement/.test(e.message))errors.push(e.message);});vc.on('error',e=>errors.push(String(e)));
  const dom=await JSDOM.fromURL(BASE,{runScripts:'dangerously',resources:'usable',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){
   const ctx=new Proxy({},{get:(t,k)=>k==='measureText'?()=>({width:10}):k==='getImageData'?()=>({data:new Uint8ClampedArray(4)}):typeof k==='string'?(()=>{}):undefined,set:()=>true});
@@ -95,6 +105,39 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
  await until(()=>w.HanaCourse.settings(w.HanaStudio.getLearning()).target==='2027-06-25',3000,'settings saved');
  const review=w.HanaReview.build(w.HanaStudio.getLearning(),w.HanaCurriculum.skills);assert.equal(review.learning.papers.length,1);assert.equal(review.learning.course.settings.perWeek,6);
  console.log('parent plan ok');
+
+ // Every new family through the real question render, answer forms and report.
+ // This is an isolated DOM test profile; it never posts child learning data.
+ $('progressDialog').close();
+ for(const family of w.HanaExamStyle.families){
+  const id=family.skills[0],tier=family.tiers.at(-1);
+  // Explicitly choose the year just as the UI does before a focus session.
+  const yearButton=d.querySelector(`[data-year="${id[1]}"]`);if(yearButton)click(yearButton);
+  w.HanaStudio.start('focus',id);
+  const session=w.HanaStudio.getSession();session.phase='practice';
+  session.current.spec=w.HanaExamStyle.generate(id,tier,Math.random,family.id);session.current.entry='';
+  const spec=session.current.spec;w.HanaStudio.renderCurrent();
+  assert.equal($('qtext').textContent,spec.qtext);
+  if(spec.essentialVisual)assert.ok($('qvis').querySelector('svg,table'),'required diagram shown');
+  if(spec.kind==='key'){
+   assert.equal($('typedAnswer').disabled,false);assert.equal($('answerForm').hidden,false);
+   $('typedAnswer').value=String((spec.money?spec.ans/100:spec.ans)+1);
+   $('answerForm').dispatchEvent(new w.Event('submit',{cancelable:true}));
+   assert.equal(session.current.done,false);assert.equal(session.current.tries,1);
+   $('typedAnswer').value=spec.money?(spec.ans/100).toFixed(2):String(spec.ans);
+   $('answerForm').dispatchEvent(new w.Event('submit',{cancelable:true}));
+  }else{
+   assert.equal($('partsForm').hidden,false);assert.equal($('partsForm').querySelector('button').disabled,false);
+   const e=spec.expect,set=(k,v)=>{const input=$('partsFields').querySelector(`[data-part="${k}"]`);input.value=String(v);input.dispatchEvent(new w.Event('input'));};
+   if(spec.layout==='clock'){set('h',e.h);set('m',e.m);}else{const whole=Math.floor(e.N/e.D),n=e.N%e.D;if(whole)set('w',whole);if(n){set('n',n);set('d',e.D);}}
+   $('partsForm').dispatchEvent(new w.Event('submit',{cancelable:true}));
+  }
+  assert.equal(session.current.done,true,family.id+' accepted');
+  const record=w.HanaReview.build(w.HanaStudio.getLearning(),w.HanaCurriculum.skills).learning.events.at(-1);
+  assert.equal(record.family,family.id);assert.equal(record.bankRevision,'h19');
+  assert.ok($('quizSpeech').textContent.includes(spec.steps[0]),'worked solution is visible');
+ }
+ console.log('all 29 exam-style families: input enabled, grading, worked solutions and report provenance ok');
  assert.deepEqual(errors,[],'no script errors');
  console.log('ALL FLOW CHECKS PASSED');process.exit(0);
 })().catch(e=>{console.error(e);process.exit(1);});
