@@ -31,7 +31,7 @@ const CHECKPOINTS=[
  {id:'cp2',after:'u7',title:'Checkpoint 2 · Primary 3 review',units:['u1','u2','u3','u4','u5','u6','u7'],size:'full',style:'Like a P3 end-of-year paper'},
  {id:'cp3',after:'u11',title:'Checkpoint 3 · P4 numbers & model drawing',units:['u8','u9','u10','u11'],review:['u2','u3','u4'],size:'short',style:'Like a P4 weighted assessment 1'},
  {id:'cp4',after:'u13',title:'Checkpoint 4 · P4 fractions & angles',units:['u8','u9','u10','u11','u12','u13'],review:['u4','u5','u6'],size:'full',style:'Like a P4 weighted assessment 2'},
- {id:'cp5',after:'u16',title:'Checkpoint 5 · Ready for Singapore P4',units:['u8','u9','u10','u11','u12','u13','u14','u15','u16'],review:['u3','u4','u5','u7'],size:'full',style:'Like a P4 mid-year paper'}
+ {id:'cp5',after:'u16',title:'Checkpoint 5 · Ready for Singapore P4',units:['u8','u9','u10','u11','u12','u13','u14','u15','u16'],review:['u3','u4','u5','u7'],size:'full',style:'P4 mixed-topic review'}
 ];
 const TOTAL=UNITS.reduce((n,u)=>n+u.weeks,0);
 const DEFAULTS={start:'2026-10-05',target:'2027-06-04',perWeek:5,questions:10,consolidationWeeks:3};
@@ -43,6 +43,7 @@ function settings(state){
  const out={...DEFAULTS};
  if(okDate(c.start))out.start=c.start;
  if(okDate(c.target)&&date(c.target)>date(out.start)+4*WEEK)out.target=c.target;
+ if(date(out.target)<=date(out.start)+4*WEEK)out.start=DEFAULTS.start;
  if(Number.isInteger(c.perWeek)&&c.perWeek>=2&&c.perWeek<=14)out.perWeek=c.perWeek;
  out.updatedAt=c.updatedAt||0;
  return out;
@@ -51,7 +52,7 @@ function settings(state){
 // consolidation weeks at the end for review and the final checkpoint.
 function schedule(state){
  const s=settings(state),start=date(s.start),end=date(s.target)-s.consolidationWeeks*WEEK;
- const scale=Math.max(.4,(end-start)/WEEK/TOTAL);let acc=0;
+ const scale=(end-start)/WEEK/TOTAL;let acc=0;
  return UNITS.map(u=>{const from=start+acc*scale*WEEK;acc+=u.weeks;return {...u,from,due:start+acc*scale*WEEK};});
 }
 function skillStatus(state,id,skills,now=Date.now()){
@@ -66,12 +67,18 @@ const READY=new Set(['ready','secure']);
 // Most recent checkpoint result per checkpoint; each missed skill needs two
 // independent answers after the paper before it leaves the repair list.
 function repairs(state,skills,now=Date.now()){
- const s=L.clean(state),out=new Map();
+ const s=L.clean(state),latest=new Map(),out=new Map();
+ // A retake clears a missed skill only if it actually reassesses that skill.
+ // Several questions may share a skill; every one must be correct to clear it.
  for(const p of s.papers){
-  for(const it of p.items||[])if(it.skill&&it.earned<it.marks){
-   const later=s.events.filter(e=>e.skill===it.skill&&e.at>p.at&&L.independent(e)).length;
-   if(later<2&&skills.some(k=>k.id===it.skill))out.set(it.skill,{skill:it.skill,paper:p.id,at:p.at,later});
-  }
+  if(p.complete===false)continue;
+  const assessed=new Map();
+  for(const it of p.items||[])if(it.skill)assessed.set(it.skill,!!assessed.get(it.skill)||it.earned<it.marks);
+  for(const [skill,missed]of assessed)latest.set((p.cp||p.id)+'|'+skill,{p,skill,missed});
+ }
+ for(const {p,skill,missed}of latest.values())if(missed){
+  const later=s.events.filter(e=>e.skill===skill&&e.at>p.at&&L.independent(e)).length;
+  if(later<2&&skills.some(k=>k.id===skill))out.set(skill,{skill,paper:p.id,at:p.at,later});
  }
  return [...out.values()];
 }

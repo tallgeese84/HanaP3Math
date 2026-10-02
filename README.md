@@ -1,6 +1,6 @@
 # Hana’s Maths Studio — Singapore P3 & P4
 
-A personal maths app for Hana. **Build h17** prepares Hana, who is in a US Grade 3 class, to join a Singapore Primary 4 class in June 2027 (see *Road to Singapore P4* below). Build h15 adds Euna-style evidence, feedback and parent review: actual submitted answers, optional confidence, targeted retry prompts, changed application problems, delayed recall and clear next-step recommendations. The h14 answer-button fix remains. It retains Euna’s Mochi-style layout, visual mini-lessons and adaptive practice, with one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
+A personal maths app for Hana. **Build h18** prepares Hana, who is in a US Grade 3 class, to join a Singapore Primary 4 class in June 2027 (see *Road to Singapore P4* below). Build h15 adds Euna-style evidence, feedback and parent review: actual submitted answers, optional confidence, targeted retry prompts, changed application problems, delayed recall and clear next-step recommendations. The h14 answer-button fix remains. It retains Euna’s Mochi-style layout, visual mini-lessons and adaptive practice, with one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
 
 [Open the app](https://tallgeese84.github.io/HanaP3Math/)
 
@@ -9,17 +9,27 @@ A personal maths app for Hana. **Build h17** prepares Hana, who is in a US Grade
 ## Learning
 
 - Choose **Primary 3** or **Primary 4** explicitly. Practice never promotes a child into a different school year automatically.
-- **Learn & practise** introduces new skills with a short lesson: **The idea → Watch me → Your turn**. Each of the 43 mapped skills has an explanation, diagram, worked steps and a learning check, including the three drawing groups. These are introductory mini-lessons, not full classroom videos or a complete textbook.
+- **Learn & practise** introduces new skills with a short lesson: **The idea → Watch me → Your turn**. Each of the 54 mapped skills has an explanation, diagram, worked steps and a learning check, including the three drawing groups. These are introductory mini-lessons, not full classroom videos or a complete textbook.
 - Daily practice focuses on one skill for four to six questions, then reviews up to two previously attempted skills. Unexplored skills and due review are prioritised; repeated difficulty can schedule an in-year prerequisite. **Find my starting point** remains a separate six-skill diagnostic without compulsory lessons; it is formative, not a standardised placement test.
-- **My map** offers 43 skills: 18 in P3 and 25 in P4. Forty support automatic answer checking; three construction groups save work for a grown-up’s review.
-- Three consecutive independent answers at the same level raise the next question one level, up to level 3. Two consecutive supported/unsuccessful answers lower it one level. A revealed answer or two wrong attempts on one question also lowers it. There is no speed requirement. All 40 automatically checked skills change their numbers, representation or task at each level boundary.
+- **My map** offers 54 skills: 23 in P3 and 31 in P4. Fifty-one support automatic answer checking; three construction groups save work for a grown-up’s review.
+- Three consecutive independent answers at the same level raise the next question one level, up to level 3. Two consecutive supported/unsuccessful answers lower it one level. A revealed answer or two wrong attempts on one question also lowers it. There is no speed requirement. All 51 automatically checked skills change their numbers, representation or task at each level boundary.
 - Repeated difficulty opens a recap before the next practice question. A missed introductory check starts practice at level 1. **Review the lesson** preserves the current question and draft, but the subsequent answer is marked as supported. Lesson checks earn no stars and create no mastery evidence. Drawing tasks remain human reviewed.
 - “Remembered later” requires at least six recent questions, five independent successes in the last eight, at least three at level 2 or above, evidence on different days, a recall check at least 24 hours after prior exposure and varied question forms or an application. Recall comes before a reminder. This is an app heuristic, not certification that every syllabus objective is mastered.
 - Hints, retries, lesson replays, guesses, recent exact repeats and revealed solutions are recorded separately. Supported success earns encouragement and rewards, but does not count as independent evidence. Previous stars/counters are not converted into mastery.
 - Think: **Understand → Connect → Solve → Check**. Typed notes and stylus drawings remain with the question, survive closing panels and are included in backups. Paper/ruler/protractor work needs a grown-up’s check.
 - Select **Next question** when ready; solutions no longer disappear on a timer.
 
-The curriculum uses the [Singapore MOE 2021 Mathematics Syllabus, October 2025 update](https://www.moe.gov.sg/api/media/92bff26d-b2b4-4535-b868-b8415c744b91/2021-Primary-Mathematics-Syllabus-P1-to-P6-Updated-October-2025.pdf), pages 35–40. See [the review and scope notes](docs/CURRICULUM_REVIEW.md). Questions are original. This app supplements classroom teaching and practical measurement/construction.
+The curriculum uses the [Singapore MOE 2021 Mathematics Syllabus, October 2025 update](https://www.moe.gov.sg/api/media/92bff26d-b2b4-4535-b868-b8415c744b91/2021-Primary-Mathematics-Syllabus-P1-to-P6-Updated-October-2025.pdf), pages 35–40. See [the review and scope notes](docs/CURRICULUM_REVIEW.md). Built-in questions are original; optional private packs contain the family’s supplied examination questions. This app supplements classroom teaching and practical measurement/construction.
+
+## Private exam papers (h18)
+
+In **More → My exam papers**, import the three prepared JSON packs from the family's private Drive. Import once on each device. They contain 15 distinct 2025 papers (4 P3 and 11 P4), 253 original pages including keys, and 60 visually verified questions: 16 P3 and 44 P4. One duplicate source PDF was excluded. Paper content is not in this public repository.
+
+- **Exam practice** offers short adaptive sessions in the selected year. Eligible paper questions also appear in daily/course practice, at the current difficulty. Generated questions fill gaps, so an exam pack never forces a harder level. Recent identical questions are withheld for 24 hours.
+- Answers, attempts, support, confidence, paper title, question number and source page enter the normal learning record and private Drive review. Full paper images stay in this device’s IndexedDB and are excluded from progress sync and game backups.
+- The original-page reader preserves every diagram and answer key. The remaining questions are available for paper-and-pencil work; the reader does not auto-grade them or add mastery. Answer-key corrections are listed with the relevant pack.
+- Importing replaces a pack with the same ID, without clearing learning progress. Removing a pack only removes its local content. Browser storage deletion requires reimporting it.
+- Checkpoint scores check final answers; written method marks still require a grown-up. h18 retains checkpoint drawings in reviews, corrects repair recommendations after successful reassessment, and keeps short custom schedules inside their target dates.
 
 ## Road to Singapore P4 (h17)
 
@@ -69,7 +79,7 @@ npm run test:answers
 npm run test:feedback
 ```
 
-`tests/browser.cjs` starts its own temporary HTTP server. It exercises all 43 lesson layouts at phone width, lesson reload/resume and learning checks, six-question completion with a level increase, missed-check support, reteaching, replay without losing drafts, preserved progress, working notes, input switching, both recorded voices, offline audio and backup contents. A speech adapter verifies read-aloud routing and mute; audible OS text-to-speech still needs a check on the target tablet. `PLAYWRIGHT_MODULE` and `CHROMIUM_EXECUTABLE` can point to an existing runtime installation. Tests use isolated browser storage and never access a real family Firebase account.
+`tests/browser.cjs` starts its own temporary HTTP server. It exercises all lesson layouts at phone width, lesson reload/resume and learning checks, six-question completion with a level increase, missed-check support, reteaching, replay without losing drafts, preserved progress, working notes, input switching, both recorded voices, offline audio and backup contents. A speech adapter verifies read-aloud routing and mute; audible OS text-to-speech still needs a check on the target tablet. `PLAYWRIGHT_MODULE` and `CHROMIUM_EXECUTABLE` can point to an existing runtime installation. Tests use isolated browser storage and never access a real family Firebase account.
 
 `tests/answer-locks.cjs` reproduces the h13 stale-lock failure and checks real touch input through keypad, stylus and keyboard transitions, wrong-answer retries, topic changes, lesson replay and resume. Unanswered choices remain tappable; completed questions cannot award twice.
 
