@@ -60,3 +60,13 @@ The h12 app offered hints and practice but no introductory lessons. Its schedule
 - Lesson state and completion in offline storage and backup; completion merges across devices without counting as mastery. Different-day mastery evidence uses Singapore calendar days.
 
 Validation: all 20 Node tests pass, including 38,700 generated specifications, every skill’s lesson and both tier boundaries. Browser tests cover all 43 lessons at phone width, lesson and question resume, level increases, missed-check scaffolding, automatic recaps, supported replay, recorded Mum/Dad audio, read-aloud routing/mute, offline core and backup. Device TTS pronunciation and the educational effectiveness of the thresholds are not established by these tests. These are simple, transparent adaptation rules, not a validated learner model or a replacement for classroom teaching.
+
+
+## h17 calibration against 2025 school papers
+
+Sixteen 2025 papers from CJ's Drive (P3 end-of-year: Henry Park, Raffles Girls', Rosyth, Tao Nan; P4 weighted assessments 1–3 and end-of-year: ACS (Primary), Henry Park, Nan Hua, Red Swastika) were used for format and scope only. The PDFs are scans, so only their cover pages and answer keys could be read as text; no question was copied.
+
+- **Format.** P4 weighted assessments run 40–45 minutes for about 35 marks: Section A multiple choice (1–2 marks each), Section B short answer (2 marks each) and Section C problems worth 3–5 marks with working. The app's short checkpoints match this (8 + 16 + 11 = 35 marks); full checkpoints use the same structure at 54 marks.
+- **Scope by June.** WA1 (early March) covered numbers to 100 000, rounding, factors and multiples, multiplication/division with remainders and unit-model word problems, including an excess-and-shortage problem. WA2 (May) covered fractions (mixed numbers, fraction of a set, fraction word problems) and angles; one school's WA2 also included decimals. The course therefore places whole numbers, model drawing, fractions and angles before decimals, and finishes decimals before the June target.
+- **Answer conventions.** Remainders written as `461 R 3`, compound units (`2 km 480 m`), money with cents, mixed numbers, unit-model working (`2u = $480`). The typed answer boxes follow these.
+- **Still to calibrate.** Question-level difficulty of Section C. Reading the scanned question pages (for example, as images) would allow a closer match of multi-part problems.

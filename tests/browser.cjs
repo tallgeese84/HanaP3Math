@@ -1,6 +1,8 @@
 /* Run with Playwright installed and Chromium available:
  * npm install --no-save playwright && npx playwright install chromium
  * Optional PLAYWRIGHT_MODULE / CHROMIUM_EXECUTABLE for managed runtimes. */
+// h17: typed fractions, compound units, remainders and 24-hour times use #partsForm.
+async function fillParts(page,spec){const e=spec.expect,v=spec.layout==='units'?{a:e.a,b:e.b}:spec.layout==='remainder'?{q:e.q,r:e.r}:spec.layout==='clock'?{h:e.h,m:e.m}:(()=>{const w=Math.floor(e.N/e.D),r=e.N%e.D;return r?{w:w||'',n:r,d:e.D}:{w};})();for(const [k,x] of Object.entries(v))await page.locator(`#partsFields [data-part="${k}"]`).fill(String(x));await page.locator('#partsForm button').click();}
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.join(__dirname,'..');
@@ -26,6 +28,7 @@ const root=path.join(__dirname,'..');
  async function correct(){
   await clearCatch();const spec=await page.evaluate(()=>HanaStudio.getSession().current.spec);
   if(spec.kind==='key'){await page.locator('#typedAnswer').fill(spec.money?(spec.ans/100).toFixed(2):String(spec.ans));await page.locator('#answerForm button').click();}
+  else if(spec.kind==='parts')await fillParts(page,spec);
   else{const i=spec.choices.findIndex(x=>x.v===spec.ans);await page.locator('#pad button').nth(i).click();}
   await page.waitForFunction(()=>HanaStudio.getSession().current.done);
  }

@@ -93,7 +93,7 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
  assert.match($('planPanel').textContent,/35\/35/);
  $('planTarget').value='2027-06-25';$('planWeek').value='6';click($('planSave'));
  await until(()=>w.HanaCourse.settings(w.HanaStudio.getLearning()).target==='2027-06-25',3000,'settings saved');
- const review=w.HanaReview.build(w.HanaStudio.getLearning(),w.HanaCurriculum.skills);assert.equal(review.papers.length,1);assert.equal(review.course.settings.perWeek,6);
+ const review=w.HanaReview.build(w.HanaStudio.getLearning(),w.HanaCurriculum.skills);assert.equal(review.learning.papers.length,1);assert.equal(review.learning.course.settings.perWeek,6);
  console.log('parent plan ok');
  assert.deepEqual(errors,[],'no script errors');
  console.log('ALL FLOW CHECKS PASSED');process.exit(0);

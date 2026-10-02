@@ -1,6 +1,6 @@
 # Hana’s Maths Studio — Singapore P3 & P4
 
-A personal maths app for Hana. **Build h15** adds Euna-style evidence, feedback and parent review: actual submitted answers, optional confidence, targeted retry prompts, changed application problems, delayed recall and clear next-step recommendations. The h14 answer-button fix remains. It retains Euna’s Mochi-style layout, visual mini-lessons and adaptive practice, with one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
+A personal maths app for Hana. **Build h17** prepares Hana, who is in a US Grade 3 class, to join a Singapore Primary 4 class in June 2027 (see *Road to Singapore P4* below). Build h15 adds Euna-style evidence, feedback and parent review: actual submitted answers, optional confidence, targeted retry prompts, changed application problems, delayed recall and clear next-step recommendations. The h14 answer-button fix remains. It retains Euna’s Mochi-style layout, visual mini-lessons and adaptive practice, with one question at a time, optional thinking tools, a skill map and short sessions. Mum and Dad’s voices, Hana’s avatar, Pokémon collection, handwriting recognition and the existing backup/sync identity are preserved.
 
 [Open the app](https://tallgeese84.github.io/HanaP3Math/)
 
@@ -20,6 +20,18 @@ A personal maths app for Hana. **Build h15** adds Euna-style evidence, feedback 
 - Select **Next question** when ready; solutions no longer disappear on a timer.
 
 The curriculum uses the [Singapore MOE 2021 Mathematics Syllabus, October 2025 update](https://www.moe.gov.sg/api/media/92bff26d-b2b4-4535-b868-b8415c744b91/2021-Primary-Mathematics-Syllabus-P1-to-P6-Updated-October-2025.pdf), pages 35–40. See [the review and scope notes](docs/CURRICULUM_REVIEW.md). Questions are original. This app supplements classroom teaching and practical measurement/construction.
+
+## Road to Singapore P4 (h17)
+
+- **Course.** 16 units take Hana through all of P3 and P4 in school-year order (`course.js`). Each unit has planned dates spread between the start (5 Oct 2026) and the target (4 Jun 2027), keeping the last three weeks for review and Checkpoint 5. Grown-ups can change the dates and sessions per week in **More → Hana’s progress → June plan**.
+- **Daily session.** **Today’s session** gives 10 questions (about 20 minutes): the next skill in the current unit (opening with its lesson), 2 word problems and 3 review questions from earlier units. A skill counts as ready after three recent independent answers, including two at level 2 or 3.
+- **Word problems.** 11 skills with original Singapore-style problems (`problems.js`): level 1 shows a labelled bar model, level 2 shows the model’s shape, level 3 asks Hana to draw her own in ✎ Think.
+- **Typed answers.** Fractions, mixed numbers, compound units (3 kg 45 g), remainders (12 R 3) and 24-hour times are typed into boxes instead of chosen. An equal but unsimplified fraction gets a prompt to simplify, as schools deduct a mark.
+- **Checkpoints.** Five papers (`papers.js`) appear on the home screen when their unit is done or its date has passed. Format follows 2025 school papers: Section A multiple choice (1–2 marks), Section B short answer (2 marks), Section C word problems (3–5 marks) with a working canvas; 35 marks (about 45 minutes) or 54 marks (about 70 minutes). No hints or feedback until the end. Results set the next sessions automatically: missed skills are reviewed first until answered independently twice, a Section C score below 60% adds a third word problem to each session, and a score below 50% adds review.
+- **Parent view.** The June plan shows on-track status against the schedule, units with planned dates, checkpoint scores by section and topic, and recommendations. Pace warnings appear only in the parent view, never on Hana’s home screen.
+- Checkpoint results and the plan are saved in `hq_learning` (`papers`, `course`), sync between devices and are included in the learning review and Drive mirror (inside `learning`, so the existing relay needs no change).
+
+`node tests/jsdom-flow.cjs` (with `npm install --no-save jsdom` and a static server on port 8765) runs a full course session, a typed-fraction retry, a complete checkpoint and the parent settings in jsdom.
 
 ## Family audio
 

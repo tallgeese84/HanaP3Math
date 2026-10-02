@@ -1,5 +1,7 @@
 /* Real browser regression for answer controls across question/input transitions.
  * Fixtures only set an ordinary saved diagnostic session; clicks/taps use the UI. */
+// h17: typed answers use #partsForm.
+async function fillParts(page,spec){const e=spec.expect,v=spec.layout==='units'?{a:e.a,b:e.b}:spec.layout==='remainder'?{q:e.q,r:e.r}:spec.layout==='clock'?{h:e.h,m:e.m}:(()=>{const w=Math.floor(e.N/e.D),r=e.N%e.D;return r?{w:w||'',n:r,d:e.D}:{w};})();for(const [k,x] of Object.entries(v))await page.locator(`#partsFields [data-part="${k}"]`).fill(String(x));await page.locator('#partsForm button').click();}
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.join(__dirname,'..');
@@ -19,7 +21,7 @@ const root=path.join(__dirname,'..');
   await context.route('https://script.google.com/**',route=>{requests.push(JSON.parse(route.request().postData()));return route.fulfill({status:200,body:'sent'});});
   await page.goto(`http://127.0.0.1:${server.address().port}/`);await page.waitForFunction(()=>!document.querySelector('#startDaily').disabled);
   const clear=()=>page.waitForFunction(()=>document.querySelector('#catch').style.display!=='flex',{},{timeout:20000});
-  async function correct(){const s=await page.evaluate(()=>HanaStudio.getSession().current.spec);if(s.kind==='key'){await page.locator('#useKeyboard').click();await page.locator('#typedAnswer').fill(s.money?(s.ans/100).toFixed(2):String(s.ans));await page.locator('#answerForm button').click();}else await page.locator('#pad button').nth(s.choices.findIndex(v=>v.v===s.ans)).click();await clear();}
+  async function correct(){const s=await page.evaluate(()=>HanaStudio.getSession().current.spec);if(s.kind==='key'){await page.locator('#useKeyboard').click();await page.locator('#typedAnswer').fill(s.money?(s.ans/100).toFixed(2):String(s.ans));await page.locator('#answerForm button').click();}else if(s.kind==='parts')await fillParts(page,s);else await page.locator('#pad button').nth(s.choices.findIndex(v=>v.v===s.ans)).click();await clear();}
   async function lesson(){await page.locator('#lessonNext').click();await page.locator('#lessonNext').click();const i=await page.evaluate(()=>{const l=HanaLessons.get(HanaStudio.getSession().lesson.skill);return l.check.options.indexOf(l.check.answer);});await page.locator('#lessonChoices button').nth(i).click();await page.locator('#lessonNext').click();}
   async function report(){await page.locator('#dockMore').click();await page.locator('#openProgress').click();}
   await page.locator('#startCheckin').click();await page.locator('[data-confidence="guess"]').click();await correct();

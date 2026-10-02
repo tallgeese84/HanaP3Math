@@ -24,8 +24,12 @@ function bars(rows,opt={}){
  rows.forEach((r,i)=>{
   const y=y0+i*rowH;let x=left;
   body+=t(left-10,y+19,r.name,'end',14,'bold');
-  for(const g of r.segs){
-   const w=Math.max(16,g.v*scale);
+  // Labelled pieces get room for their text; the rest of the row shrinks to fit.
+  const need=r.segs.map(g=>Math.max(16,g.text?String(g.text).length*7.6+12:16)),raw=r.segs.map(g=>g.v*scale);
+  let widths=raw.map((w,i)=>Math.max(w,need[i]));const over=widths.reduce((a,b)=>a+b,0)-raw.reduce((a,b)=>a+b,0);
+  if(over>0){const flex=widths.map((w,i)=>w>need[i]?w-need[i]:0),room=flex.reduce((a,b)=>a+b,0);if(room>0)widths=widths.map((w,i)=>w-flex[i]*Math.min(1,over/room));}
+  for(const [gi,g] of r.segs.entries()){
+   const w=widths[gi];
    body+=`<rect x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${barH}" fill="${g.fill||(g.unknown?'#fff':FILL)}" stroke="${LINE}" stroke-width="2" ${g.dash||g.unknown?'stroke-dasharray="5 4"':''}/>`;
    if(g.text)body+=t(x+w/2,y+19,g.text,'middle',13);
    x+=w;
@@ -127,7 +131,7 @@ function p3groups(c,tier){
    return q({qtext:`${A}'s mother bought ${p} packets of sweets. Each packet had ${m} sweets. She shared all the sweets equally among ${g} children. How many sweets did each child get?`,ans:e,unit:'sweets',data:{type:'share',p,m,g},
     help:'First find all the sweets. Then share them into equal groups.',
     steps:[`All the sweets: ${p} × ${m} = ${total}.`,`Each child: ${total} ÷ ${g} = ${e}.`],
-    vis:bars([{name:'Sweets',segs:units(p,String(m))},{name:'Children',segs:units(g,'?')}],{label:`${p} packets of ${m}, shared into ${g} equal parts`})});
+    vis:bars([{name:'Sweets',segs:Array.from({length:p},()=>({v:m,text:String(m)}))},{name:'Children',segs:Array.from({length:g},()=>({v:e,text:'?'}))}],{label:`${p} packets of ${m}, shared into ${g} equal parts`})});
   }
  }
  if(tier===2){
@@ -363,7 +367,7 @@ L('p4-wparea','Choose area or perimeter from the story.','Fencing, edging and bo
  'A rectangle has an area of 48 cm² and length 8 cm. Find its perimeter.',['Width = 48 ÷ 8 = 6 cm.','Perimeter = 2 × (8 + 6) = 28 cm.','Cutting a square from a corner removes area but keeps the perimeter the same.'],
  'A garden needs a fence all the way round. Which do you find?',['Perimeter','Area','Length only'],'Perimeter','A fence goes around the outside, so it is the perimeter.');
 L('p4-wpgroups','Use the leftovers wisely.','Large grouping problems use the same idea as smaller ones: divide, then decide what the remainder means. In excess-and-shortage problems, giving everyone a few more uses the leftovers and the shortage together.',
- bars([{name:'3 each',segs:[...units(5,'3'),{v:.8,text:'+4',fill:KNOWN}]},{name:'5 each',segs:[...units(5,'5'),{v:.8,text:'−6',unknown:true}]}],{label:'Excess 4, shortage 6'}),
+ bars([{name:'3 each',segs:[...Array.from({length:5},()=>({v:3,text:'3'})),{v:4,text:'+4',fill:KNOWN}]},{name:'5 each',segs:[...Array.from({length:5},()=>({v:5,text:'5'}))],end:'6 short'}],{label:'Excess 4, shortage 6',caption:'19 sweets: 4 left over at 3 each, 6 short at 5 each'}),
  'If each pupil gets 3 sweets, 4 are left. If each gets 5, 6 more are needed. How many pupils?',['Giving 2 more each needs the 4 left over plus 6 more: 10 sweets.','Pupils: 10 ÷ 2 = 5.','Sweets: 5 × 3 + 4 = 19. Check: 5 × 5 = 25, which is 6 more than 19.'],
  '1000 people take buses that carry 45. How many buses are needed?',['23','22','45'],'23','1000 ÷ 45 = 22 R 10, so the 10 people need one more bus: 23.');
 

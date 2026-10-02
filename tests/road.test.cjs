@@ -109,6 +109,7 @@ test('checkpoint results drive repairs and more word problems, and travel with f
  const later=L.merge(state,{events:repairs.flatMap(id=>[1,2].map(i=>({id:id+i,skill:id,tier:2,at:5000+i,independent:true,correct:true})))});
  assert.equal(K.repairs(later,C.skills,9000).length,0,'two later independent answers clear a repair');
  assert.deepEqual(L.merge(L.merge({},{papers:[rec]}),{papers:[rec]}).papers.length,1);
- const review=R.build(state,C.skills,{now:3000,timeZone:'UTC'});assert.equal(review.papers.length,1);assert.ok(review.course&&review.course.units.length===16);
+ const review=R.build(state,C.skills,{now:3000,timeZone:'UTC'});// Inside `learning` so the existing Drive relay allowlist passes it unchanged.
+ assert.equal(review.learning.papers.length,1);assert.ok(review.learning.course&&review.learning.course.units.length===16);
  const half=Pa.markItem({marks:2,spec:{kind:'parts',layout:'fraction',expect:{N:1,D:2}}},{n:'2',d:'4'});assert.equal(half.earned,1,'unsimplified fraction loses one mark');
 });
