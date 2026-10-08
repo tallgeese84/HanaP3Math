@@ -4,8 +4,11 @@ Software integration prepared on a review branch, not deployed. Daily priority
 updates are private JSON data and do not require GitHub commits or version changes.
 
 Uses the saved `hq_review_mirror_v1` connection. POST action `readHanaNextSession`
-contains only the existing body secret. Requires family relay 1.2.0 and its optional
-`HANA_NIGHTLY_PLAN_DOC_ID` pointing to the verified private machine plan Doc.
+contains only the existing body secret. For the owner's confirmed separate Hana
+project, use [the standalone reader addition](../tools/HANA_STANDALONE_NIGHTLY_SETUP.md)
+and `HANA_NIGHTLY_PLAN_DOC_ID` pointing to the verified private machine plan Doc.
+An already-confirmed shared family relay 1.2.0 uses the same protocol, but must not
+replace Hana's standalone daily-snapshot relay as a routine upgrade.
 No source code contains the real endpoint, secret, plan Doc ID or learner records.
 
 Schema 1 (synthetic example, not a plan for Hana):
@@ -47,12 +50,13 @@ completed events and assistance flags are the evidence of actual work.
 
 ## Verification
 
-`npm test` — 71 passing tests (including 17 new protocol/priority tests).
+`npm test` — 113 passing tests (including 17 app protocol/priority tests and
+42 standalone relay compatibility and end-to-end protocol checks).
 `node tests/nightly-flow.cjs` — full DOM flow with mocked private plan, real lesson,
 real answer submission, safe resume, exported receipt, and checkpoint preservation.
 `node tests/jsdom-flow.cjs` — normal course, fractions, checkpoint and all 29 exam
 families through the actual UI. Local synthetic profile only.
-`node --test tools/family-relay-tests/family-relay.test.cjs` — 100 relay checks.
+`node --test tools/family-relay-tests/family-relay.test.cjs` — 102 shared-template checks.
 
 Pending owner approval: private plan configuration/publication, automation writes,
 Google deployment. Merge/release and real tablet receipt/upload acceptance are also
