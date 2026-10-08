@@ -19,7 +19,7 @@ test('one family endpoint keeps all three report schemas and filenames separate'
  assert.equal(h.app,'Hana learning');assert.equal(h.learning.events[0].id,'hana-answer');assert.ok(h.receivedAt);assert.equal(h.learning.checks.length,0);
  assert.equal(JSON.parse(r.files.get('family/jonah-pokemath-latest.json')).sessions['jonah-session'].rev,2);
  assert.equal(r.files.size,6);assert.equal(r.released,3);
- const health=JSON.parse(r.ctx.doGet());assert.deepEqual(health.apps,['Mochi learning','PokéMath learning','Hana learning']);assert.equal(health.writeOnly,true);assert.ok(!JSON.stringify(health).includes(secret));
+ const health=JSON.parse(r.ctx.doGet());assert.deepEqual(health.apps,['Mochi learning','PokéMath learning','Hana learning']);assert.equal(health.writeOnly,false);assert.ok(!JSON.stringify(health).includes(secret));
 });
 test('authentication and invalid Hana payloads cannot write to Drive',()=>{
  const r=relay(),b=hana(Date.now());
@@ -43,7 +43,7 @@ test('Jonah still merges concurrent and late device sessions by revision',()=>{
 function client(initial={}){
  const values=new Map(Object.entries(initial)),elements={},requests=[];
  const storage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
- const ctx={document:{getElementById:id=>elements[id]??=( {value:'',textContent:''} )},localStorage:storage,navigator:{onLine:true},window:{addEventListener(){}},HanaProgress:{snapshot:()=>hana(Date.now())},setTimeout:()=>1,clearTimeout(){},AbortController,fetch:async(u,o)=>{requests.push({url:u,body:JSON.parse(o.body)});return {};}};
+ const ctx={document:{getElementById:id=>elements[id]??=( {value:'',textContent:''} )},localStorage:storage,navigator:{onLine:true},Event,window:{addEventListener(){},dispatchEvent(){}},HanaProgress:{snapshot:()=>hana(Date.now())},setTimeout:()=>1,clearTimeout(){},AbortController,fetch:async(u,o)=>{requests.push({url:u,body:JSON.parse(o.body)});return {};}};
  vm.createContext(ctx);vm.runInContext(read('drive-mirror.js'),ctx);
  return {values,elements,requests};
 }

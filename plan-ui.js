@@ -134,6 +134,6 @@ function renderPanel(){
   await HanaStudio.mergeLearning({course:{start,target,perWeek:Math.max(2,Math.min(14,perWeek||5)),updatedAt:Date.now()}});if(typeof schedulePush==='function')schedulePush();$('planSaved').textContent='Saved.';renderPanel();renderHome();};
 }
 window.addEventListener('hana:learning-changed',()=>renderHome());
-window.HanaPlan={renderHome,renderPanel,openPaper,status:()=>K.status(learning(),C.skills)};
+window.HanaPlan={hasPendingPaper:()=>!!pendingPaper,resumePaper,renderHome,renderPanel,openPaper,status:()=>K.status(learning(),C.skills)};
 Promise.resolve(window.hanaBoot).then(loadPending).catch(loadPending);
 })();

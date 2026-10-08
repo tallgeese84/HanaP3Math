@@ -25,9 +25,9 @@ async function send(reason='learning changed'){
  finally{clearTimeout(timeout);busy=false;showSettings();if(again){again=false;schedule();}}
 }
 function schedule(){clearTimeout(timer);if(valid(config()))timer=setTimeout(()=>send(),12000);}
-$('saveMirror').onclick=()=>{const c={url:$('mirrorURL').value.trim(),secret:$('mirrorSecret').value.trim()};if(!valid(c)){$('mirrorStatus').textContent='Enter a Hana Apps Script /exec URL and a secret of at least 24 characters.';return;}try{localStorage.setItem(KEY,JSON.stringify(c));status='';send('parent request');}catch{$('mirrorStatus').textContent='Could not save settings on this device. Downloads are still available.';}};
+$('saveMirror').onclick=()=>{const c={url:$('mirrorURL').value.trim(),secret:$('mirrorSecret').value.trim()};if(!valid(c)){$('mirrorStatus').textContent='Enter a Hana Apps Script /exec URL and a secret of at least 24 characters.';return;}try{localStorage.setItem(KEY,JSON.stringify(c));status='';window.dispatchEvent(new Event('hana:mirror-settings'));send('parent request');}catch{$('mirrorStatus').textContent='Could not save settings on this device. Downloads are still available.';}};
 $('reuseFamilyMirror').onclick=useFamilyConnection;
-$('clearMirror').onclick=()=>{clearTimeout(timer);localStorage.removeItem(KEY);localStorage.removeItem(LAST);status='Disconnected on this device. Existing Drive copies are unchanged.';showSettings();};
+$('clearMirror').onclick=()=>{clearTimeout(timer);localStorage.removeItem(KEY);localStorage.removeItem(LAST);window.dispatchEvent(new Event('hana:mirror-settings'));status='Disconnected on this device. Existing Drive copies are unchanged.';showSettings();};
 window.addEventListener('hana:learning-changed',schedule);window.addEventListener('online',schedule);
 window.HanaMirror={showSettings};
 Promise.resolve(window.hanaBoot).then(()=>setTimeout(schedule,1500));
