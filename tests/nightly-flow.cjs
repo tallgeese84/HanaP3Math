@@ -37,6 +37,20 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
  await until(()=>w.HanaStudio&&w.HanaStudio.ready()&&w.HanaPlan,10000,'app boot');
  await until(()=>w.HanaNightly?.report().received,8000,'nightly receipt');
  assert.equal(w.HanaNightly.report().active,null,'receipt alone does not claim adoption');
+ // Reproduce the parent switching apps while pasting connection details.
+ click($('openProgress'));
+ const connection=w.localStorage.getItem('hq_review_mirror_v1'),original=JSON.parse(connection);
+ const draftURL='https://script.google.com/macros/s/UNSAVED_TEST/exec';
+ $('mirrorURL').value=draftURL;$('mirrorURL').dispatchEvent(new w.Event('input',{bubbles:true}));
+ $('mirrorSecret').value='unfinished';$('mirrorSecret').dispatchEvent(new w.Event('input',{bubbles:true}));
+ Object.defineProperty(d,'visibilityState',{configurable:true,value:'hidden'});d.dispatchEvent(new w.Event('visibilitychange'));
+ w.dispatchEvent(new w.Event('hana:learning-changed'));await sleep(20);
+ Object.defineProperty(d,'visibilityState',{configurable:true,value:'visible'});d.dispatchEvent(new w.Event('visibilitychange'));
+ assert.equal($('mirrorURL').value,draftURL,'background progress refresh preserves pasted URL');
+ assert.equal($('mirrorSecret').value,'unfinished','background progress refresh preserves secret input');
+ assert.equal(w.localStorage.getItem('hq_review_mirror_v1'),connection,'draft does not change the saved connection');
+ assert.ok(!requests.some(r=>r.secret==='unfinished'),'draft secret is never sent');
+ $('mirrorURL').value=original.url;$('mirrorSecret').value=original.secret;click($('closeProgress'));
  click($('startCourse'));
  const session=w.HanaStudio.getSession();
  assert.equal(session.queue[0],'p3-patterns');assert.equal(session.queue.length,10);
@@ -63,6 +77,6 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
  const beforePaper=JSON.parse(await w.eval('store').get('hq_paper'));w.HanaStudio.start('course');
  assert.ok(on('scr-paper'));assert.equal(JSON.parse(await w.eval('store').get('hq_paper')).id,beforePaper.id);
  assert.deepEqual(errors,[],'no script errors');
- console.log('PASS: actual UI receipt → prioritised lesson/question → safe resume → exported evidence; checkpoint and sibling data preserved.');
+ console.log('PASS: connection edits survive background/report refresh; actual UI receipt → prioritised lesson/question → safe resume → exported evidence; checkpoint and sibling data preserved.');
  w.close();process.exit(0);
 })().catch(e=>{console.error(e);process.exit(1);});
