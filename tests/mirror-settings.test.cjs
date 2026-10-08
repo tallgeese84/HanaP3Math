@@ -2,14 +2,15 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {JSDOM}=require('jsdom');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../drive-mirror.js'),'utf8');
 const url='https://script.google.com/macros/s/TEST_ONLY/exec',secret='synthetic-test-secret-at-least-24-characters';
-function page(t,{saved={},draft={},blocked=false}={}){
+const reply=body=>({ok:true,type:'cors',text:async()=>JSON.stringify(body)});
+function page(t,{saved={},draft={},blocked=false,response=()=>reply({ok:true,latest:'hana-learning-latest.json'})}={}){
  const dom=new JSDOM('<input id="mirrorURL"><input id="mirrorSecret" type="password"><p id="mirrorStatus"></p><button id="saveMirror"></button><button id="reuseFamilyMirror"></button><button id="clearMirror"></button>',{url:'https://family.example/HanaP3Math/',runScripts:'outside-only'});
  t.after(()=>dom.window.close());const w=dom.window,$=id=>w.document.getElementById(id),requests=[];
  for(const [k,v]of Object.entries(saved))w.localStorage.setItem(k,v);
  for(const [k,v]of Object.entries(draft))w.sessionStorage.setItem(k,v);
  if(blocked)Object.defineProperty(w,'sessionStorage',{get(){throw Error('Unavailable');}});
  w.hanaBoot=new Promise(()=>{});w.HanaProgress={snapshot:()=>({app:'Hana learning',learning:{events:[]}})};
- w.AbortController=AbortController;w.fetch=async(u,o)=>{requests.push({url:u,body:JSON.parse(o.body)});return {type:'opaque'};};
+ w.AbortController=AbortController;w.fetch=async(u,o)=>{requests.push({url:u,body:JSON.parse(o.body),mode:o.mode,credentials:o.credentials});return response();};
  w.eval(source);w.HanaMirror.showSettings();
  const type=(id,value)=>{$(id).value=value;$(id).dispatchEvent(new w.Event('input',{bubbles:true}));};
  return {w,$,requests,type};
@@ -42,4 +43,39 @@ test('successful save and explicit disconnect clear the URL draft only',async t=
 test('blocked session storage does not erase edits or prevent an explicit save',async t=>{
  const p=page(t,{blocked:true});p.type('mirrorURL',url);p.type('mirrorSecret',secret);p.w.HanaMirror.showSettings();
  assert.equal(p.$('mirrorURL').value,url);assert.equal(p.$('mirrorSecret').value,secret);p.$('saveMirror').click();await new Promise(r=>setImmediate(r));assert.equal(p.requests.length,1);
+});
+test('Save immediately shows sending, then reports a confirmed Google response',async t=>{
+ let finish;const p=page(t,{response:()=>new Promise(r=>finish=r)});
+ p.type('mirrorURL',url);p.type('mirrorSecret',secret);p.$('saveMirror').click();
+ assert.match(p.$('mirrorStatus').textContent,/Sending review/);assert.equal(p.$('saveMirror').disabled,true);
+ assert.equal(p.requests[0].mode,'cors');assert.equal(p.requests[0].credentials,'omit');
+ finish(reply({ok:true,latest:'hana-learning-latest.json'}));await new Promise(r=>setImmediate(r));
+ assert.match(p.$('mirrorStatus').textContent,/Drive confirmed: review saved/);assert.equal(p.$('saveMirror').disabled,false);assert.ok(p.w.localStorage.getItem('hq_review_mirror_sent_v1'));
+});
+test('both relay formats, rejected credentials and ambiguous delivery are distinguished',async t=>{
+ const cases=[
+  [()=>reply({status:'saved'}),/Drive confirmed: review saved/,true],
+  [()=>reply({ok:true,latest:'hana-learning-latest.json',status:'older snapshot skipped'}),/newer review is already saved/,true],
+  [()=>reply({status:'older snapshot skipped'}),/newer review is already saved/,true],
+  [()=>reply({ok:false,error:'Unauthorized.'}),/secret was rejected/,false],
+  [()=>reply({status:'unauthorized'}),/secret was rejected/,false],
+  [()=>reply({ok:false,error:'Invalid Hana review.'}),/relay rejected the review/,false],
+  [()=>({ok:true,type:'opaque'}),/Delivery not confirmed/,false],
+  [()=>({ok:true,type:'cors',text:async()=>'<html>sign in</html>'}),/Delivery not confirmed/,false],
+  [()=>{throw Error('network');},/Delivery not confirmed/,false],
+  [()=>reply({ok:true,latest:'euna-mochi-latest.json'}),/Delivery not confirmed/,false],
+ ];
+ for(const [response,message,confirmed] of cases){
+  const p=page(t,{response});p.type('mirrorURL',url);p.type('mirrorSecret',secret);p.$('saveMirror').click();await new Promise(r=>setImmediate(r));
+  assert.match(p.$('mirrorStatus').textContent,message);assert.equal(!!p.w.localStorage.getItem('hq_review_mirror_sent_v1'),confirmed);assert.equal(p.requests.length,1,'no second unconfirmed POST');assert.ok(!p.$('mirrorStatus').textContent.includes(secret));
+ }
+});
+test('invalid URL and short secret give an immediate specific message without a request',t=>{
+ const p=page(t);p.type('mirrorURL','not-a-url');p.type('mirrorSecret',secret);p.$('saveMirror').click();assert.match(p.$('mirrorStatus').textContent,/URL is invalid/);
+ p.type('mirrorURL',url);p.type('mirrorSecret','short');p.$('saveMirror').click();assert.match(p.$('mirrorStatus').textContent,/secret must contain at least 24/);assert.equal(p.requests.length,0);
+});
+test('disconnect during a request prevents its late response from claiming a saved connection',async t=>{
+ let finish;const p=page(t,{response:()=>new Promise(r=>finish=r)});p.type('mirrorURL',url);p.type('mirrorSecret',secret);p.$('saveMirror').click();p.$('clearMirror').click();
+ finish(reply({ok:true,latest:'hana-learning-latest.json'}));await new Promise(r=>setImmediate(r));
+ assert.match(p.$('mirrorStatus').textContent,/Disconnected/);assert.equal(p.w.localStorage.getItem('hq_review_mirror_sent_v1'),null);
 });

@@ -18,7 +18,7 @@ const root=path.join(__dirname,'..');
   const context=await browser.newContext({viewport:{width:800,height:1100},hasTouch:true,timezoneId:'America/Chicago',reducedMotion:'reduce'});
   await context.addInitScript(()=>{if(!localStorage.getItem('fixture')){localStorage.setItem('fixture','yes');localStorage.setItem('hq_sound','off');localStorage.setItem('hq_tts','off');localStorage.setItem('hq_caught','25,133');}});
   const page=await context.newPage(),errors=[],requests=[];page.on('pageerror',e=>{errors.push(e.message);console.log('BROWSER ERROR:',e.message);});page.setDefaultTimeout(15000);
-  await context.route('https://script.google.com/**',route=>{requests.push(JSON.parse(route.request().postData()));return route.fulfill({status:200,body:'sent'});});
+  await context.route('https://script.google.com/**',route=>{const body=JSON.parse(route.request().postData());if(!body.action)requests.push(body);return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body.action?{ok:true,service:'family-learning-mirror',planApi:1,student:'Hana',plan:null}:{ok:true,latest:'hana-learning-latest.json'})});});
   await page.goto(`http://127.0.0.1:${server.address().port}/`);await page.waitForFunction(()=>!document.querySelector('#startDaily').disabled);
   const clear=()=>page.waitForFunction(()=>document.querySelector('#catch').style.display!=='flex',{},{timeout:20000});
   async function correct(){const s=await page.evaluate(()=>HanaStudio.getSession().current.spec);if(s.kind==='key'){await page.locator('#useKeyboard').click();await page.locator('#typedAnswer').fill(s.money?(s.ans/100).toFixed(2):String(s.ans));await page.locator('#answerForm button').click();}else if(s.kind==='parts')await fillParts(page,s);else await page.locator('#pad button').nth(s.choices.findIndex(v=>v.v===s.ans)).click();await clear();}
@@ -42,7 +42,7 @@ const root=path.join(__dirname,'..');
   await page.evaluate(()=>document.querySelector('#progressDialog').scrollTop=0);await page.screenshot({path:path.join(root,'docs/preview-progress.png'),fullPage:true});
   
   // Review credential stays outside the reusable learning payload. Cross-origin status is honest.
-  await page.locator('#mirrorSettings summary').click();await page.locator('#mirrorURL').fill('https://script.google.com/macros/s/HANA_TEST_ONLY/exec');await page.locator('#mirrorSecret').fill('test-secret-that-never-leaves-this-test');await page.locator('#saveMirror').click();await page.waitForFunction(()=>document.querySelector('#mirrorStatus').textContent.includes('cannot confirm'));
+  await page.locator('#mirrorSettings summary').click();await page.locator('#mirrorURL').fill('https://script.google.com/macros/s/HANA_TEST_ONLY/exec');await page.locator('#mirrorSecret').fill('test-secret-that-never-leaves-this-test');await page.locator('#saveMirror').click();await page.waitForFunction(()=>document.querySelector('#mirrorStatus').textContent.includes('Drive confirmed: review saved'));
   assert.equal(requests.length,1);assert.equal(requests[0].backup.app,'Hana learning');assert.ok(!JSON.stringify(requests[0].backup).includes('test-secret'));assert.ok(!JSON.stringify(requests[0].backup).includes('HANA_TEST_ONLY'));await page.locator('#clearMirror').click();await page.locator('#closeProgress').click();
   
   // A real delayed recall opens directly on the question, before any lesson.

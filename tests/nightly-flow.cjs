@@ -28,7 +28,7 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
   w.TextEncoder=TextEncoder;w.AbortController=AbortController;Object.defineProperty(w.crypto,'subtle',{value:webcrypto.subtle});
   w.localStorage.setItem('hq_review_mirror_v1',JSON.stringify({url:'https://script.google.com/macros/s/SYNTHETIC/exec',secret:'synthetic-secret-at-least-24-characters'}));
   w.localStorage.setItem('mochi_progress_sentinel','preserve-euna');w.localStorage.setItem('pokemath_collection_sentinel','preserve-jonah');
-  w.fetch=async(u,o)=>{if(String(u).startsWith('https://script.google.com/')){const b=JSON.parse(o.body);requests.push(b);if(b.action)return {ok:true,type:'cors',text:async()=>JSON.stringify({ok:true,service:'family-learning-mirror',planApi:1,student:'Hana',plan:remote})};return {type:'opaque'};}return fetch(new URL(u,BASE),o);};
+  w.fetch=async(u,o)=>{if(String(u).startsWith('https://script.google.com/')){const b=JSON.parse(o.body);requests.push(b);if(b.action)return {ok:true,type:'cors',text:async()=>JSON.stringify({ok:true,service:'family-learning-mirror',planApi:1,student:'Hana',plan:remote})};return {ok:true,type:'cors',text:async()=>JSON.stringify({ok:true,latest:'hana-learning-latest.json'})};}return fetch(new URL(u,BASE),o);};
   w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
   w.confirm=()=>true;w.alert=()=>{};w.scrollTo=()=>{};
  }});
@@ -50,7 +50,12 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
  assert.equal($('mirrorSecret').value,'unfinished','background progress refresh preserves secret input');
  assert.equal(w.localStorage.getItem('hq_review_mirror_v1'),connection,'draft does not change the saved connection');
  assert.ok(!requests.some(r=>r.secret==='unfinished'),'draft secret is never sent');
- $('mirrorURL').value=original.url;$('mirrorSecret').value=original.secret;click($('closeProgress'));
+ $('mirrorURL').value=original.url;$('mirrorSecret').value=original.secret;click($('saveMirror'));
+ assert.match($('mirrorStatus').textContent,/Sending review/,'save immediately shows feedback');
+ await until(()=>$('mirrorStatus').textContent.includes('Drive confirmed: review saved'),8000,'upload acknowledgement');
+ await until(()=>w.HanaNightly.report().received,8000,'plan receipt after saving');
+ assert.equal(requests.filter(r=>r.backup).length,1,'one upload with the existing review format');
+ click($('closeProgress'));
  click($('startCourse'));
  const session=w.HanaStudio.getSession();
  assert.equal(session.queue[0],'p3-patterns');assert.equal(session.queue.length,10);
