@@ -18,11 +18,12 @@ Older question history is retained. Missing responses/confidence/time are unknow
 
 ## Private family Drive mirror (h16)
 
-Owner source inspection on 2026-10-08 confirms a separate Hana relay project.
-For its h20 nightly-plan addition, follow
-[the standalone setup](../tools/HANA_STANDALONE_NIGHTLY_SETUP.md). Keep its saved
-connection and daily snapshots; the shared-connection option below is a separate
-migration, not the approved default for this existing installation.
+Owner source inspection on 2026-10-08 confirms a separate Hana relay project,
+but Hana's saved device endpoint still needs checking. The shared family relay
+1.2.0 is now live as Google Version 5. If Hana uses her standalone relay, follow
+[the standalone setup](../tools/HANA_STANDALONE_NIGHTLY_SETUP.md) for its h20
+nightly-plan addition and keep its saved connection and daily snapshots. A
+previously unconfigured device can use the existing family connection below.
 
 The mirror is a reporting copy; existing Firebase family sync remains authoritative. Sync the family devices before taking a combined review. Hana's relay rejects older snapshots but does not merge simultaneous unsynced devices. Jonah's session merge and Euna's backup format are unchanged.
 

@@ -1,14 +1,17 @@
 # Hana nightly priorities — h20
 
-Software integration prepared on a review branch, not deployed. Daily priority
-updates are private JSON data and do not require GitHub commits or version changes.
+Build h20 supports nightly priorities. Publishing app code and activating its
+private connection/reviewer are separate steps. Daily priority updates are private
+JSON data and do not require GitHub commits or version changes.
 
 Uses the saved `hq_review_mirror_v1` connection. POST action `readHanaNextSession`
-contains only the existing body secret. For the owner's confirmed separate Hana
-project, use [the standalone reader addition](../tools/HANA_STANDALONE_NIGHTLY_SETUP.md)
+contains only the existing body secret. First inspect the connection saved on
+Hana's actual device. The shared family relay 1.2.0 is now live as Google Version 5
+and its Hana reader can access the private empty plan Doc. If Hana instead uses
+her separate relay project, use [the standalone reader addition](../tools/HANA_STANDALONE_NIGHTLY_SETUP.md)
 and `HANA_NIGHTLY_PLAN_DOC_ID` pointing to the verified private machine plan Doc.
-An already-confirmed shared family relay 1.2.0 uses the same protocol, but must not
-replace Hana's standalone daily-snapshot relay as a routine upgrade.
+Preserve that relay's daily snapshots and existing settings. Do not replace or
+migrate a configured standalone relay merely because the shared endpoint exists.
 No source code contains the real endpoint, secret, plan Doc ID or learner records.
 
 Schema 1 (synthetic example, not a plan for Hana):
@@ -58,6 +61,8 @@ real answer submission, safe resume, exported receipt, and checkpoint preservati
 families through the actual UI. Local synthetic profile only.
 `node --test tools/family-relay-tests/family-relay.test.cjs` — 102 shared-template checks.
 
-Pending owner approval: private plan configuration/publication, automation writes,
-Google deployment. Merge/release and real tablet receipt/upload acceptance are also
-pending. No live learner data was used by these tests.
+The owner approved the nightly review/next-day app workflow and completed the
+shared Google relay setup. Euna's app has confirmed live receipt. Hana's actual
+connection, ordinary progress upload, real-device plan receipt and reviewer
+activation remain the stage 2 acceptance checks. No live learner data was used
+by these tests. See tools/RELAY_CONNECTION_AUDIT.md for the deployment evidence.
