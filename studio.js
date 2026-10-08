@@ -50,13 +50,15 @@ function pause(){
 function home(){pause();stopZap();stopRace();mode='home';renderBuddyHome();show('home');}
 function start(kind='daily',focus=null){
  if(!ready)return;
+ if(kind==='course'&&window.HanaPlan?.hasPendingPaper?.()){HanaPlan.resumePaper();return;}
+ if(kind==='course'&&session&&session.index<session.queue.length){$('resumeSession').click();return;}
  pause();stopZap();stopRace();
- let queue,sessionYear=year;
- if(kind==='course'){const p=HanaCourse.plan(learning,C.skills);queue=p.queue;sessionYear=C.skills.find(s=>s.id===p.focus)?.year||C.skills.find(s=>s.id===queue[0])?.year||year;}
+ let queue,nightlyMeta={},sessionYear=year;
+ if(kind==='course'){let p=HanaCourse.plan(learning,C.skills);const plan=window.HanaNightly?.adopt();if(plan){p=HanaNightly.prioritize(p,plan,learning,C.skills,HanaCourse,L);nightlyMeta={nightlyPlan:p.nightlyPlan,nightlySlots:p.nightlySlots};}queue=p.queue;sessionYear=C.skills.find(s=>s.id===p.focus)?.year||C.skills.find(s=>s.id===queue[0])?.year||year;}
  else if(kind==='exam')queue=window.HanaExams?.queue(learning,year)||[];
  else queue=L.plan(learning,C.skills,year,kind,focus);
  if(!queue.length)return;
- session={id:uid(),year:sessionYear,kind,focus,repairs:{},queue,index:0,results:[],current:null,phase:'practice',taught:{},reteachFor:{}};
+ session={...nightlyMeta,id:uid(),year:sessionYear,kind,focus,repairs:{},queue,index:0,results:[],current:null,phase:'practice',taught:{},reteachFor:{}};
  running=true;audio()?.resume?.().catch(()=>{});helloOnce();makeQuestion();
 }
 function makeQuestion(){
@@ -69,6 +71,7 @@ function makeQuestion(){
  for(let i=0;i<24;i++){spec=application?K.transfer(C,id,tier):C.generate(id,tier);if(!recent.has(spec.signature)&&(i>=12||K.form(spec)!==lastForm))break;}
  if(session.kind==='exam'||(['daily','course'].includes(session.kind)&&session.index%3===2)){const imported=window.HanaExams?.select(learning,id,tier,{used:session.results.map(e=>e.sourceId).filter(Boolean),now});if(imported)spec=imported;}
  session.current={id:uid(),spec,tries:0,hints:0,entry:'',done:false,revealed:false,started:now,elapsed:0,activeMs:0,notes:{},strokes:[],answerStrokes:[],attempts:[],confidence:'unreported',phase:recall?'recall':application&&!spec.sourceId?'transfer':'practice',reviewGapMs:recall?gap:0,repeated:learning.events.some(e=>e.signature===spec.signature&&now-e.at<86400000)};
+ if(session.nightlyPlan&&session.nightlySlots?.includes(session.index)){session.current.nightlyPlan={...session.nightlyPlan};window.HanaNightly?.started(session.nightlyPlan);}
  lastTick=lastActivity=now;
  stage='understand';session.phase='practice';session.taught||={};session.reteachFor||={};
  // Recall happens before a reminder. A replay remains available and marks help.
@@ -244,6 +247,7 @@ function settle(independent,revealed,manual=false){
  tick();c.done=true;c.revealed=revealed;padLocked=true;
  c.feedback=manual?'Saved for a grown-up’s review.':revealed?'Let’s learn from this. '+c.spec.fact:independent?'You worked it out! '+c.spec.fact:c.confidence==='guess'?'You found the answer. Let’s check why it works. '+c.spec.fact:c.repeated?'A familiar question! Let’s try another one next. '+c.spec.fact:'You got there with help. '+c.spec.fact;
  const event={id:c.id,session:session.id,skill:c.spec.skill,year:c.spec.year,tier:c.spec.tier,at:Date.now(),independent:!!independent,correct:!revealed&&!manual,manual,lessonHelp:!!c.lessonHelp,hints:c.hints,tries:c.tries,revealed,elapsedMs:c.elapsed+Math.max(0,Date.now()-c.started),signature:c.spec.signature,question:c.spec.qtext,answer:c.spec.ans,notes:c.notes,strokes:c.strokes,attempts:c.attempts||[],confidence:c.confidence||'unreported',obstacle:c.obstacle||null,phase:c.phase||'practice',reviewGapMs:Math.max(0,Math.min(c.reviewGapMs||0,c.started-L.exposure(learning,c.spec.skill))),form:c.spec.form||K.form(c.spec),family:c.spec.family,bankRevision:c.spec.bankRevision,sourceId:c.spec.sourceId,sourcePaper:c.spec.sourcePaper,sourceQuestion:c.spec.sourceQuestion,sourcePage:c.spec.sourcePage,repeated:!!c.repeated,course:session.kind==='course',activeMs:c.activeMs??null,answerDisplay:answerText(),money:!!c.spec.money,updatedAt:Date.now()};
+ if(c.nightlyPlan)event.nightlyPlan={...c.nightlyPlan};
  learning=L.merge(learning,{events:[event]});session.results.push(event);
  const nextEvidence=L.evidence(learning,c.spec.skill);
  // Offer two smaller foundation steps inside a daily session. Explicit focus

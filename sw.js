@@ -1,7 +1,7 @@
 // Atomic app-shell cache. Family audio is core; artwork is cached on demand.
-const CACHE = 'pokequest-hana-h19';
+const CACHE = 'pokequest-hana-h20';
 const PREFIX = 'pokequest-hana-';
-const CORE = ['./','./index.html','./manifest.json','./hana-voice.json','./hana-avatar.png','./digit-net.json','./icon-192.png','./icon-512.png','./studio.css?v=h19','./curriculum.js?v=h19','./learning.js?v=h19','./lessons.js?v=h19','./studio.js?v=h19','./coach.js?v=h19','./learning-review.js?v=h19','./progress.js?v=h19','./drive-mirror.js?v=h19','./problems.js?v=h19','./exam-style.js?v=h19','./course.js?v=h19','./papers.js?v=h19','./plan-ui.js?v=h19','./exam-bank.js?v=h19','./exam-library.js?v=h19','./art/1.png','./art/4.png','./art/7.png','./art/25.png','./art/133.png'];
+const CORE = ['./nightly-priority-core.js?v=h20','./nightly-plan.js?v=h20','./','./index.html','./manifest.json','./hana-voice.json','./hana-avatar.png','./digit-net.json','./icon-192.png','./icon-512.png','./studio.css?v=h20','./curriculum.js?v=h20','./learning.js?v=h20','./lessons.js?v=h20','./studio.js?v=h20','./coach.js?v=h20','./learning-review.js?v=h20','./progress.js?v=h20','./drive-mirror.js?v=h20','./problems.js?v=h20','./exam-style.js?v=h20','./course.js?v=h20','./papers.js?v=h20','./plan-ui.js?v=h20','./exam-bank.js?v=h20','./exam-library.js?v=h20','./art/1.png','./art/4.png','./art/7.png','./art/25.png','./art/133.png'];
 self.addEventListener('install',event=>{
  event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(CORE);await self.skipWaiting();})());
 });
