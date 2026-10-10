@@ -96,6 +96,10 @@ const root=path.join(__dirname,'..');
   await context.setOffline(false);
   // Backup includes new learning history and the unfinished question.
   await page.locator('#dockMore').click();await page.locator('#openFamilySettings').click();
+  // h23: the first grown-up visit sets the device PIN (entered twice), then settings open.
+  await page.locator('.gg-dialog .gg-input').fill('2468');await page.locator('.gg-dialog .gg-go').click();
+  await page.locator('.gg-dialog .gg-input').fill('2468');await page.locator('.gg-dialog .gg-go').click();
+  await page.locator('#ppCode').waitFor({state:'visible'});
   const backup=await page.locator('#ppCode').inputValue(),decoded=JSON.parse(Buffer.from(backup.slice(5),'base64').toString());
   assert.ok(decoded.hq_learning);assert.ok(decoded.hq_session);assert.equal(JSON.parse(decoded.hq_learning).events.length,6);assert.ok(JSON.parse(decoded.hq_learning).lessons['p3-place']);
   await page.locator('#ppClose').click();

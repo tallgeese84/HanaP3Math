@@ -38,6 +38,7 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
  await until(()=>w.HanaNightly?.report().received,8000,'nightly receipt');
  assert.equal(w.HanaNightly.report().active,null,'receipt alone does not claim adoption');
  // Reproduce the parent switching apps while pasting connection details.
+ w.grownupGate.unlock(3600000);
  click($('openProgress'));
  const connection=w.localStorage.getItem('hq_review_mirror_v1'),original=JSON.parse(connection);
  const draftURL='https://script.google.com/macros/s/UNSAVED_TEST/exec';

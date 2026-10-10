@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
 <title>Hana’s Maths Studio · P3 & P4</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f8f6fb">
@@ -616,16 +617,17 @@
     .choices button{ font-size:20px; }
   }
 </style>
-<link rel="stylesheet" href="studio.css?v=h22">
-<script src="curriculum.js?v=h22"></script>
-<script src="learning.js?v=h22"></script>
-<script src="lessons.js?v=h22"></script>
-<script src="coach.js?v=h22"></script>
-<script src="learning-review.js?v=h22"></script>
-<script src="problems.js?v=h22"></script>
-<script src="exam-style.js?v=h22"></script>
-<script src="course.js?v=h22"></script>
-<script src="papers.js?v=h22"></script>
+<link rel="stylesheet" href="studio.css?v=h23">
+<script src="grownup-gate.js?v=h23"></script>
+<script src="curriculum.js?v=h23"></script>
+<script src="learning.js?v=h23"></script>
+<script src="lessons.js?v=h23"></script>
+<script src="coach.js?v=h23"></script>
+<script src="learning-review.js?v=h23"></script>
+<script src="problems.js?v=h23"></script>
+<script src="exam-style.js?v=h23"></script>
+<script src="course.js?v=h23"></script>
+<script src="papers.js?v=h23"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -936,10 +938,10 @@
      2. add a line to CHANGELOG.md saying what changed
    The version shows under the title and in ☁️ → Check build.
    ============================================================ */
-const APP_VERSION = 'h22';
+const APP_VERSION = 'h23';
 /* ============================================================
    PokéMath Quest — Hana · Singapore MOE Primary 3 maths
-   Numbers to 10 000 · Add & Subtract · Multiply & Divide
+   Numbers to 10&nbsp;000 · Add & Subtract · Multiply & Divide
    Fractions · Money · Time & Measure
    Wild Catch (× tables) · Pattern Race (skip counting)
    ============================================================ */
@@ -1014,9 +1016,9 @@ function fmtMoney(cents){
 }
 function fmtNum(n){
   // Singapore convention: 4-digit numbers closed up (1396);
-  // 5-digit and up get a thin space (12\u2009345)
+  // 5-digit and up get a narrow no-break space (12\u202f345), so a number never splits across lines
   const s = String(n);
-  return s.length >= 5 ? s.slice(0, s.length - 3) + '\u2009' + s.slice(-3) : s;
+  return s.length >= 5 ? s.slice(0, s.length - 3) + '\u202f' + s.slice(-3) : s;
 }
 function timeWords(h24, m){
   const h = ((h24 + 11) % 12) + 1;
@@ -3863,9 +3865,13 @@ document.addEventListener('visibilitychange', () => {
   document.querySelector('h1').addEventListener('click', () => {
     const now = Date.now();
     taps = taps.filter(t => now - t < 1200); taps.push(now);
-    if (taps.length >= 3){ taps = []; openPanel(); }
+    if (taps.length >= 3){ taps = []; document.getElementById('cloudBtn').click(); }
   });
   document.getElementById('cloudBtn').addEventListener('click', openPanel);
+  // h23: settings, progress reports and the June plan open only with the grown-up PIN.
+  window.grownupGate = GrownupGate.create({mode:'pin', key:'hq_grownup_pin_v1', accent:'#7a4aa8'});
+  window.grownupGate.resetFromUrl();
+  window.grownupGate.protect(['#cloudBtn', '#openProgress']);
   async function openPanel(){
     const data = {};
     for (const k of KEYS) data[k] = await store.get(k);
@@ -4069,13 +4075,13 @@ document.getElementById('buildTag').textContent = 'build ' + APP_VERSION;
 renderSoundButton();document.getElementById('cloudBtn').textContent='⋯';document.getElementById('cloudBtn').setAttribute('aria-label','Grown-up settings');
 window.hanaBoot = loadStars();
 </script>
-<script src="exam-bank.js?v=h22"></script>
-<script src="nightly-priority-core.js?v=h22"></script>
-<script src="studio.js?v=h22"></script>
-<script src="progress.js?v=h22"></script>
-<script src="drive-mirror.js?v=h22"></script>
-<script src="plan-ui.js?v=h22"></script>
-<script src="nightly-plan.js?v=h22"></script>
-<script src="exam-library.js?v=h22"></script>
+<script src="exam-bank.js?v=h23"></script>
+<script src="nightly-priority-core.js?v=h23"></script>
+<script src="studio.js?v=h23"></script>
+<script src="progress.js?v=h23"></script>
+<script src="drive-mirror.js?v=h23"></script>
+<script src="plan-ui.js?v=h23"></script>
+<script src="nightly-plan.js?v=h23"></script>
+<script src="exam-library.js?v=h23"></script>
 </body>
 </html>

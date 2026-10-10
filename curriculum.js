@@ -80,7 +80,7 @@ function placeQuestion(c,year,t){
 }
 for(const year of [3,4]){
  const p='p'+year;
- skill(p+'-place',year,'Numbers',year===3?'Numbers to 10 000':'Numbers to 100 000',(c,t)=>placeQuestion(c,year,t),year===4?'p3-place':null);
+ skill(p+'-place',year,'Numbers',year===3?'Numbers to 10\u00a0000':'Numbers to 100\u00a0000',(c,t)=>placeQuestion(c,year,t),year===4?'p3-place':null);
  skill(p+'-patterns',year,'Numbers','Compare & find patterns',(c,t)=>{
   const max=year===3?10000:100000,step=c.pick(t===1?[10]:t===2?[100,1000]:[25,50,200,500]),a=c.int(1,max-4*step);
   if(t===3)return num(`Complete: ${a+3*step}, __, ${a+step}, ${a}.`,a+2*step,'Find the constant decrease. Use the two final numbers to work out the step.');

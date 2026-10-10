@@ -1,3 +1,16 @@
+# h23 — grown-up PIN and tidier home screen
+
+- Settings, progress reports, the June plan and the Drive mirror open only after a grown-up PIN set on each device (salted hash, never synced or backed up; two-minute unlock; one-minute pause after five misses; `?reset-grownup-pin` to reset).
+- Home shows child-friendly next steps (“New topic! Start with a short lesson.”); the parent report keeps the detailed reasons.
+- Five-digit numbers use a no-break space, so 10 000 never splits across lines.
+- `noindex` meta tag. Learning records, family audio, sync and nightly plans are unchanged.
+
+# h20–h22 — nightly priorities and mirror reliability
+
+- h20: private nightly priorities guide the next new session; unfinished work, due review and prerequisites stay first.
+- h21: unfinished mirror connection fields survive app switching and report refreshes.
+- h22: settings saves are confirmed, uploads show progress, and the relay acknowledgement distinguishes saved, rejected and uncertain delivery.
+
 # h19 — broader exam-style questions in everyday practice
 
 - Add 29 original, parameterised families across 37 existing P3/P4 skills. Questions include inverse relationships, multi-step money, fractions, decimals, rounding bounds, joined figures and data interpretation.

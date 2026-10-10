@@ -9,14 +9,14 @@ const node=typeof module==='object'&&module.exports;
 const L=node?require('./learning.js'):root.HanaLearning;
 const DAY=86400000,WEEK=7*DAY;
 const UNITS=[
- {id:'u1',year:3,title:'Numbers to 10 000',skills:['p3-place','p3-patterns'],weeks:1.5},
+ {id:'u1',year:3,title:'Numbers to 10\u00a0000',skills:['p3-place','p3-patterns'],weeks:1.5},
  {id:'u2',year:3,title:'Add & subtract with stories',skills:['p3-addsub','p3-wppartwhole','p3-wpcompare'],weeks:2},
  {id:'u3',year:3,title:'Multiply & divide',skills:['p3-tables','p3-muldiv','p3-remainder','p3-wpgroups','p3-wptimes'],weeks:3},
  {id:'u4',year:3,title:'Money & metric measures',skills:['p3-money','p3-measure','p3-wpmoney'],weeks:2},
  {id:'u5',year:3,title:'Fractions',skills:['p3-equivalent','p3-fraccompare','p3-fracops'],weeks:2},
  {id:'u6',year:3,title:'Time & the 24-hour clock',skills:['p3-time'],weeks:1},
  {id:'u7',year:3,title:'Shapes, lines & bar graphs',skills:['p3-area','p3-angles','p3-lines','p3-drawlines','p3-bars','p3-story'],weeks:2},
- {id:'u8',year:4,title:'Numbers to 100 000',skills:['p4-place','p4-patterns','p4-round'],weeks:1.5},
+ {id:'u8',year:4,title:'Numbers to 100\u00a0000',skills:['p4-place','p4-patterns','p4-round'],weeks:1.5},
  {id:'u9',year:4,title:'Factors & multiples',skills:['p4-factors'],weeks:1},
  {id:'u10',year:4,title:'Multiply & divide larger numbers',skills:['p4-multiply','p4-divide','p4-remainder','p4-wpgroups'],weeks:2.5},
  {id:'u11',year:4,title:'Model drawing: units, before & after',skills:['p4-wpunits','p4-wpbeforeafter'],weeks:2},

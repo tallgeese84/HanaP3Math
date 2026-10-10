@@ -8,7 +8,7 @@
 const C=typeof module==='object'&&module.exports?require('./curriculum.js'):root.HanaCurriculum;
 const T=typeof module==='object'&&module.exports?require('./lessons.js'):root.HanaLessons;
 const esc=C.esc,blank='<span class="blank" id="blank">?</span>';
-const fmt=n=>{const s=String(n);return s.length>=5?s.slice(0,-3)+' '+s.slice(-3):s;};
+const fmt=n=>{const s=String(n);return s.length>=5?s.slice(0,-3)+'\u202f'+s.slice(-3):s;}; // narrow no-break space: 12 345 never splits across lines
 const cash=c=>'$'+(c/100).toFixed(2),dollars=d=>'$'+fmt(d);
 const names=[['Mei','Ravi'],['Siti','Ben'],['Wei Ling','Ahmad'],['Priya','Jun'],['Aisha','Ken'],['Hana','Euna'],['Farah','Daniel'],['Li Ting','Arun']];
 const things=['stickers','marbles','stamps','beads','cards','shells','erasers','buttons'];

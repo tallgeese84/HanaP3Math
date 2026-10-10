@@ -29,7 +29,7 @@ test('word problems: every family, tier and seed has a positive answer that matc
   assert.ok(!/NaN|undefined|Infinity/.test(q.qtext+q.fact+q.help+q.vis),q.qtext);
   for(const m of q.qtext.matchAll(/(\d+)\/(\d+)/g))assert.equal(C.gcd(+m[1],+m[2]),1,'fractions in questions are in simplest form: '+q.qtext);
   if(q.year===3)assert.ok(nums(q.qtext).every(n=>n<=10000),'P3 numbers stay within 10 000: '+q.qtext);
-  if(q.year===4)assert.ok(nums(q.qtext.replace(/ /g,'')).every(n=>n<=100000),'P4 numbers stay within 100 000');
+  if(q.year===4)assert.ok(nums(q.qtext.replace(/[\u2009\u202f\u00a0]/g,'')).every(n=>n<=100000),'P4 numbers stay within 100 000');
   if(tier===3)assert.ok(!q.vis.includes('<svg'),'tier 3 asks Hana to draw her own model');
  }
  assert.ok(seen.size>=40);

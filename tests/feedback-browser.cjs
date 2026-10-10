@@ -23,7 +23,7 @@ const root=path.join(__dirname,'..');
   const clear=()=>page.waitForFunction(()=>document.querySelector('#catch').style.display!=='flex',{},{timeout:20000});
   async function correct(){const s=await page.evaluate(()=>HanaStudio.getSession().current.spec);if(s.kind==='key'){await page.locator('#useKeyboard').click();await page.locator('#typedAnswer').fill(s.money?(s.ans/100).toFixed(2):String(s.ans));await page.locator('#answerForm button').click();}else if(s.kind==='parts')await fillParts(page,s);else await page.locator('#pad button').nth(s.choices.findIndex(v=>v.v===s.ans)).click();await clear();}
   async function lesson(){await page.locator('#lessonNext').click();await page.locator('#lessonNext').click();const i=await page.evaluate(()=>{const l=HanaLessons.get(HanaStudio.getSession().lesson.skill);return l.check.options.indexOf(l.check.answer);});await page.locator('#lessonChoices button').nth(i).click();await page.locator('#lessonNext').click();}
-  async function report(){await page.locator('#dockMore').click();await page.locator('#openProgress').click();}
+  async function report(){await page.evaluate(()=>window.grownupGate.unlock(3600000));await page.locator('#dockMore').click();await page.locator('#openProgress').click();}
   await page.locator('#startCheckin').click();await page.locator('[data-confidence="guess"]').click();await correct();
   let e=await page.evaluate(()=>HanaStudio.getLearning().events.at(-1));assert.equal(e.independent,false);assert.equal(e.confidence,'guess');assert.equal(e.attempts.length,1);assert.equal(e.attempts[0].response,e.answer);assert.equal(e.attempts[0].correct,true);
   

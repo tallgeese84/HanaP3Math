@@ -40,7 +40,8 @@ function recommend(state,skills,year,now=Date.now()){
  const e=evidence(state,id,now),repair=skills.find(x=>x.year===year&&x.prerequisite===id&&evidence(state,x.id,now).reteach);
  const action=repair?'foundation':e.due?'recall':e.reteach?'reteach':!e.total?'learn':e.success>=3?'apply':'practice';
  const reason=repair?`Rebuild ${s.name.toLowerCase()} before returning to ${repair.name.toLowerCase()}.`:e.due?'Check what she remembers before showing the lesson again.':e.reteach?'Recent answers needed help. Revisit the idea, then try a smaller step.':!e.total?'No practice evidence yet. Begin with the lesson and a short check.':e.success>=3?'Try a changed problem where one is available, then revisit it on another day.':'Build a few independent answers before adding more challenge.';
- return {skill:id,name:s.name,year,tier:e.tier,action,reason};
+ const child={foundation:'A quick step back first. It makes the next topic easier.',recall:'Show what you remember!',reteach:'Let’s look at the idea again, one small step at a time.',learn:'New topic! Start with a short lesson.',apply:'Try a new twist on it.',practice:'A few more to make it strong.'}[action];
+ return {skill:id,name:s.name,year,tier:e.tier,action,reason,child};
 }
 function evidence(state,id,now=Date.now()){
  const all=clean(state).events.filter(e=>e.skill===id&&!e.manual),recent=all.slice(-8),success=recent.filter(independent).length,last=all.at(-1);

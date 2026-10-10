@@ -39,7 +39,7 @@ function renderHome(){
  const pool=C.skills.filter(s=>s.year===year&&!s.manual),done=pool.filter(s=>L.evidence(learning,s.id).total>0).length,secure=pool.filter(s=>L.evidence(learning,s.id).secure).length;
  $('homeProgress').textContent=`Primary ${year} · ${done} of ${pool.length} skills explored${secure?' · '+secure+' secure':''}`;
  $('resumeSession').hidden=!session||session.index>=session.queue.length;
- const rec=L.recommend(learning,C.skills,year);$('nextPlan').textContent=rec?`Next: ${rec.name}. ${rec.reason}`:'';
+ const rec=L.recommend(learning,C.skills,year);$('nextPlan').textContent=rec?`Next: ${rec.name}. ${rec.child||rec.reason}`:'';
  if(session)$('resumeSession').textContent=`Continue P${session.year} · ${session.index+1}/${session.queue.length}`;
  $('startDaily').disabled=!ready;$('startCheckin').disabled=!ready;
  window.HanaPlan?.renderHome();

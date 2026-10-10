@@ -98,6 +98,7 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
  click($('paperDone'));assert.ok(on('scr-home'));
 
  // ---- parent plan ----
+ w.grownupGate.unlock(3600000);
  click($('openProgress'));
  assert.match($('planPanel').textContent,/June plan/);assert.match($('planPanel').textContent,/Checkpoint 1 · P3 numbers & operations/);
  assert.match($('planPanel').textContent,/35\/35/);
