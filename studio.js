@@ -115,11 +115,11 @@ function openLesson(reason='replay'){
  const c=current();if(!c||!T.get(c.spec.skill))return;
  tick();if(reason==='replay')saveDraft();stopAllAudio();
  if(reason==='replay'&&!c.done)c.lessonHelp=true;
- session.phase='lesson';session.lesson={id:uid(),skill:c.spec.skill,slide:0,reason,checked:false,selected:null,passed:false,tries:0};
+ session.phase='lesson';session.lesson={id:uid(),skill:c.spec.skill,variant:T.nextVariant(c.spec.skill,learning.checks),slide:0,reason,checked:false,selected:null,passed:false,tries:0};
  renderLesson();persist();
 }
 function renderLesson(){
- const ls=session?.lesson,d=T.get(ls?.skill);if(!d)return;
+ const ls=session?.lesson,d=T.get(ls?.skill,ls?.variant);if(!d)return;
  learning.exposures[ls.skill]=Date.now();persist();
  running=true;mode='home';show('lesson');stopAllAudio();clearTimeout(q.lookTimer);clearSigns();
  const skill=C.skills.find(s=>s.id===ls.skill);
@@ -130,7 +130,7 @@ function renderLesson(){
  document.querySelectorAll('.lesson-tabs span').forEach((el,i)=>el.setAttribute('aria-current',i===ls.slide?'step':'false'));
  $('lessonHeading').textContent=ls.slide===0?d.goal:ls.slide===1?d.example:d.check.question;
  $('lessonBody').innerHTML=ls.slide===0?`<p>${esc(d.idea)}</p>`:ls.slide===1?`<ol class="lesson-steps">${d.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>`:'<p>Have a go. We’ll work through the answer together.</p>';
- $('lessonVisual').innerHTML=d.visual||'';
+ $('lessonVisual').innerHTML=(ls.slide===2&&d.check.visual!==undefined?d.check.visual:d.visual)||'';
  $('lessonChoices').innerHTML=ls.slide===2?d.check.options.map((v,i)=>`<button data-check="${i}" ${ls.checked?'disabled':''} class="${ls.checked&&v===d.check.answer?'right':ls.checked&&v===ls.selected?'wrong':''}">${esc(v)}</button>`).join(''):'';
  $('lessonChoices').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   if(ls.checked)return;ls.selected=d.check.options[+b.dataset.check];ls.passed=ls.selected===d.check.answer;ls.tries++;ls.checked=true;
@@ -145,7 +145,7 @@ function renderLesson(){
 }
 function finishLesson(){
  const ls=session.lesson,c=current();if(!ls.checked)return;
- const at=Date.now(),d=T.get(ls.skill);learning=L.merge(learning,{lessons:{[ls.skill]:{at,passed:ls.passed,tries:ls.tries}},checks:[{id:ls.id||uid(),skill:ls.skill,at,passed:ls.passed,tries:ls.tries,reason:ls.reason,question:d.check.question,response:ls.selected,answer:d.check.answer}]});changed();
+ const at=Date.now(),d=T.get(ls.skill,ls.variant);learning=L.merge(learning,{lessons:{[ls.skill]:{at,passed:ls.passed,tries:ls.tries}},checks:[{id:ls.id||uid(),skill:ls.skill,at,passed:ls.passed,tries:ls.tries,reason:ls.reason,question:d.check.question,response:ls.selected,answer:d.check.answer}]});changed();
  session.taught||={};session.taught[ls.skill]=true;
  const e=L.evidence(learning,ls.skill);if(e.last){session.reteachFor||={};session.reteachFor[ls.skill]=e.last.id;}
  // A missed introduction check starts practice with a smaller step. A replay
@@ -157,7 +157,7 @@ $('lessonBack').onclick=()=>{if(session.lesson.slide>0){session.lesson.slide--;r
 $('lessonNext').onclick=()=>{if(session.lesson.slide<2){session.lesson.slide++;renderLesson();persist();$('lessonHeading').focus();}else finishLesson();};
 $('listenLesson').onclick=()=>{
  if(!soundOn||!ttsAllowed())return;
- const ls=session.lesson,d=T.get(ls.skill);stopAllAudio();
+ const ls=session.lesson,d=T.get(ls.skill,ls.variant);stopAllAudio();
  const words=ls.slide===0?d.goal+'. '+d.idea:ls.slide===1?d.example+'. '+d.steps.join(' '):d.check.question+'. '+d.check.options.join('. ')+(ls.checked?'. '+d.check.explanation:'');
  say(words);
 };
@@ -275,7 +275,7 @@ function settle(independent,revealed,manual=false){
 function renderHint(){
  const c=current();if(!c)return;
  let box=$('helpBox');if(!box){box=document.createElement('div');box.id='helpBox';box.className='helpbox';$('qvis').after(box);}
- box.textContent=c.spec.help;
+ box.innerHTML=`<p>${esc(c.spec.help)}</p>`+(c.spec.supportVisual||'');
 }
 function hint(){
  const c=current();if(!running||session.phase==='lesson'||!c||c.done)return;

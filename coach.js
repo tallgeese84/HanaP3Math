@@ -21,6 +21,20 @@ add('p3-story',(r,t)=>{const groups=integer(r,3,[0,4,6,8][t]),each=integer(r,6,[
 add('p4-round',(r,t)=>{const unit=[0,10,100,1000][t],value=integer(r,11,89)*unit+integer(r,1,unit-1);return n(`A shop rounds prices to the nearest $${unit} for an estimate. A delivery costs $${value}. What price should it use for the estimate?`,Math.round(value/unit)*unit,`Choose the nearer multiple of ${unit}. Check the next smaller place to decide which way to round.`,'dollars');});
 add('p4-fracset',(r,t)=>{const d=integer(r,3,[0,4,6,9][t]),k=integer(r,2,[0,3,6,9][t]);return n(`A box has ${d*k} beads. 1/${d} of them are blue and all the rest are red. How many beads are red?`,(d-1)*k,'Find the blue beads first, then subtract them from the whole set.','beads');});
 add('p4-decimalops',(r,t)=>{const a=integer(r,120,[0,199,350,999][t]),b=integer(r,30,[0,50,90,399][t]),q=n(`A bottle held some water. After ${ (b/100).toFixed(2)} litres were poured out, ${(a/100).toFixed(2)} litres remained. How many litres were in the bottle at first?`,(a+b)/100,'Add the poured amount back to the remainder. Align decimal points.','litres');q.dec=true;return q;});
+// An application changes the relationship without raising the current tier.
+// The bar and method are optional hints; no worked solution is shown first.
+add('p3-wppartwhole',(r,t)=>{
+ const a=integer(r,t===1?120:900,t===1?260:2600),b=t===3?a+integer(r,150,600):integer(r,t===1?60:600,t===1?150:1700),left=integer(r,t===1?100:500,t===1?280:1800),whole=a+b+left,findWhole=r()<.5;
+ const question=t===3?(findWhole?`Hana gave ${a} beads to Euna and ${b-a} more beads than that to Jonah. She has ${left} beads left. How many beads did she have at first?`:`Three boxes contain ${whole} beads altogether. The first box contains ${a} beads. The second contains ${b-a} more than the first. How many beads are in the last box?`):(findWhole?`Hana gave ${a} beads to Euna and ${b} to Jonah. She has ${left} beads left. How many beads did she have at first?`:`Three boxes contain ${whole} beads altogether. The first has ${a} and the second has ${b}. How many beads are in the last box?`);
+ const help='Name the whole and the parts. Put each part inside one bar. Add the parts to find the whole, or subtract the known parts from the whole to find a missing part.';
+ const q=n(question,findWhole?whole:left,help,'beads'),P=typeof module==='object'&&module.exports?require('./problems.js'):root.HanaProblems;
+ // All pieces have equal drawn widths, so the unknown length cannot give away
+ // the answer. Tier 3 leaves the second amount to be worked out by Hana.
+ q.supportVisual=P.bars([{name:'Parts',segs:[{v:1,text:String(a)},{v:1,text:t===3?`${a} + ${b-a}`:String(b)},{v:1,text:findWhole?String(left):'?',unknown:!findWhole}]}],{top:{text:findWhole?'?':String(whole)},label:findWhole?'Find the starting whole from the given parts':'Find the missing part inside the whole',caption:'Lengths are not to scale. Label and check each part.'});
+ q.wordProblem=true;q.data={type:'part-whole-application',parts:[a,b,left],whole,findWhole};
+ q.fact=`${q.ans} beads. ${t===3?`Second part: ${a} + ${b-a} = ${b}. `:''}${findWhole?`Whole: ${a} + ${b} + ${left} = ${whole}.`:`Known parts: ${a} + ${b} = ${a+b}. Missing part: ${whole} − ${a+b} = ${left}.`} Check: all three parts make ${whole}.`;
+ return q;
+});
 function transfer(C,id,tier,random=Math.random){
  const richer=tier>=2&&applications[id]?.(random,tier);if(richer)return richer;
  if(!forms[id])return null;const skill=C.skills.find(s=>s.id===id),q=forms[id](random,tier,id);
@@ -31,6 +45,12 @@ function feedback(q,response){
  const value=typeof response==='number'?response:Number(response),a=Number(q.ans);
  const slip=q.misconceptions?.find(s=>Number.isFinite(s.value)&&Math.abs(s.value-value)<1e-6);
  if(slip)return {tag:slip.tag,message:slip.message};
+ if(q.skill==='p3-wppartwhole'){
+  const d=q.data||{},whole=d.whole??d.total,parts=d.parts||('a'in d?[d.a,d.a+d.d]:[]);
+  if(!d.findWhole&&parts.length>=2&&value===parts[0]+parts[1])return {tag:'whole-vs-part',message:'That is the total of the known parts. Which part are we finding? The whole also includes the missing part.'};
+  if(!d.findWhole&&parts.length>=2&&(value===whole-parts[0]||value===whole-parts[1]))return {tag:'missing-known-part',message:'Both known parts belong inside the whole. Combine them first, then find what remains.'};
+  return {tag:'whole-vs-part',message:d.findWhole?'The starting whole includes what was given away AND what is left. Label every part before adding.':'Label the whole, the known parts and the question mark. The whole equals all the parts together.'};
+ }
  if(/place/.test(q.skill)&&a>0&&(value===a*10||value===a/10))return {tag:'place-value',message:'Check which place the digit is in. One place to the left is ten times as much.'};
  if(q.money&&value===a*100)return {tag:'money-units',message:'Check dollars and cents. The answer box is in dollars; 100 cents makes $1.'};
  if(/frac/.test(q.skill)||q.skill.includes('equivalent'))return {tag:'fraction-check',message:'Check what counts as one whole, and whether the pieces are equal. Try a bar model.'};

@@ -1,5 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const C=require('../curriculum.js'),L=require('../learning.js'),K=require('../coach.js'),R=require('../learning-review.js');
+require('../problems.js');
 const DAY=86400000,now=Date.parse('2026-09-28T01:27:00Z'),base={id:'answer',session:'session',skill:'p3-place',year:3,tier:1,at:now,correct:true,independent:true,hints:0,tries:0};
 test('guesses, exact repeats, lesson help and manual work do not increase independent evidence',()=>{
  for(const flag of [{confidence:'guess'},{repeated:true},{lessonHelp:true},{manual:true},{revealed:true},{tries:1}]){const events=Array.from({length:8},(_,i)=>({...base,...flag,id:String(i),at:now+i}));assert.equal(L.evidence({events},base.skill).secure,false);assert.equal(L.evidence({events},base.skill).success,0);assert.equal(L.evidence({events},base.skill).tier,1);}
@@ -44,6 +45,7 @@ test('all authored applications have independently calculated answers and respec
    case 'p4-round':expected=Math.round(nums[1]/nums[0])*nums[0];break;
    case 'p4-fracset':expected=nums[0]*(1-nums[1]/nums[2]);break;
    case 'p4-decimalops':expected=nums[0]+nums[1];break;
+   case 'p3-wppartwhole':expected=q.data.findWhole?(tier===3?2*nums[0]+nums[1]+nums[2]:nums[0]+nums[1]+nums[2]):tier===3?nums[0]-2*nums[1]-nums[2]:nums[0]-nums[1]-nums[2];break;
    default:assert.fail('Missing oracle for '+id);
   }
   assert.ok(Math.abs(q.ans-expected)<1e-8,id+': '+q.qtext);assert.equal(q.year,C.skills.find(s=>s.id===id).year);assert.equal(q.form,id+':application');assert.ok(q.help&&q.fact);

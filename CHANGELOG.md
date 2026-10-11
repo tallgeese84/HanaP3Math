@@ -1,3 +1,10 @@
+# h24 — part-whole teaching and steady daily practice
+
+- Keep the 10-question course, approximately 20-minute guidance and five sessions per week. Encourage breaks and saved-session continuation.
+- Rotate four whole-vs-part worked examples and fresh checks; a paused lesson retains its selected variant.
+- Add part-whole applications at the current difficulty, with the labelled bar available as an optional hint. Hints and lesson replays remain supported evidence.
+- Give focused feedback for confusing the known parts with the missing part or subtracting only one known part. Nightly priorities, due recall, prerequisite repair, voices, rewards and private sync are unchanged.
+
 # h23 — grown-up PIN and tidier home screen
 
 - Settings, progress reports, the June plan and the Drive mirror open only after a grown-up PIN set on each device (salted hash, never synced or backed up; two-minute unlock; one-minute pause after five misses; `?reset-grownup-pin` to reset).

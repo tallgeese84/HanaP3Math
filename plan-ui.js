@@ -14,7 +14,7 @@ const card=document.createElement('section');card.className='course-card';card.i
 card.innerHTML=`<div class="course-top"><span class="eyebrow">Road to Singapore P4</span><span class="course-week" id="courseWeek"></span></div><h3 id="courseTitle">Your learning path</h3><div class="course-bar" aria-hidden="true"><span id="courseFill"></span></div><p class="course-meta" id="courseMeta"></p><div class="home-actions"><button class="btn primary" id="startCourse">Today’s session →</button><button class="btn" id="resumePaper" hidden>Continue checkpoint</button><button class="btn" id="startPaper" hidden></button></div>`;
 const actions=document.querySelector('#scr-home .home-actions');actions.before(card);
 $('startDaily').classList.remove('primary');$('startDaily').textContent='Free practice';
-const note=actions.nextElementSibling;if(note&&note.classList.contains('muted'))note.textContent='Today’s session: about 20 minutes · lessons, word problems and review · No timer';
+const note=actions.nextElementSibling;if(note&&note.classList.contains('muted'))note.textContent='Today’s session: about 20 minutes · lessons, word problems and review. Take a break and continue when you’re ready.';
 $('startCourse').onclick=()=>HanaStudio.start('course');
 $('startPaper').onclick=()=>{const st=K.status(learning(),C.skills);if(st.nextCheckpoint)openPaper(P.build(st.nextCheckpoint.id,C.skills));};
 $('resumePaper').onclick=()=>resumePaper();

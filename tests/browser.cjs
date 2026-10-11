@@ -21,7 +21,7 @@ const root=path.join(__dirname,'..');
  async function clearCatch(){await page.waitForFunction(()=>document.querySelector('#catch').style.display!=='flex',{},{timeout:20000});}
  async function lesson(pass=true){
   while(await page.evaluate(()=>HanaStudio.getSession().lesson.slide<2))await page.locator('#lessonNext').click();
-  const selected=await page.evaluate(pass=>{const d=HanaLessons.get(HanaStudio.getSession().lesson.skill);return d.check.options.findIndex(v=>pass?v===d.check.answer:v!==d.check.answer);},pass);
+  const selected=await page.evaluate(pass=>{const ls=HanaStudio.getSession().lesson,d=HanaLessons.get(ls.skill,ls.variant);return d.check.options.findIndex(v=>pass?v===d.check.answer:v!==d.check.answer);},pass);
   if(await page.locator('#lessonNext').isDisabled())await page.locator('#lessonChoices button').nth(selected).click();
   await page.locator('#lessonNext').click();
  }
@@ -39,7 +39,8 @@ const root=path.join(__dirname,'..');
   await page.waitForFunction(()=>!!voicePack&&!!NET);
   assert.equal(await page.locator('#starCount').innerText(),'21');
   assert.match(await page.locator('#teamTally').innerText(),/2\/1025/);
-  assert.match(await page.locator('#homeProgress').innerText(),/0 of 17/);
+  const p3Skills=await page.evaluate(()=>HanaCurriculum.skills.filter(s=>s.year===3&&!s.manual).length);
+  assert.ok((await page.locator('#homeProgress').innerText()).includes(`0 of ${p3Skills} skills explored`));
   await page.screenshot({path:path.join(root,'docs/preview-desktop.png'),fullPage:true});
   await page.locator('#startDaily').click();
   assert.equal(await page.locator('#scr-lesson').isVisible(),true);
@@ -136,9 +137,10 @@ const root=path.join(__dirname,'..');
    window.originalSpeak=speechSynthesis.speak.bind(speechSynthesis);
    speechSynthesis.speak=utterance=>{window.spoken.push(utterance.text);utterance.onend?.();};
   });
-  await page.locator('#listenLesson').click();assert.match(await page.evaluate(()=>window.spoken[0]),/reflection|squares/i);
+  const checkText=await page.locator('#lessonHeading').textContent();
+  await page.locator('#listenLesson').click();assert.ok((await page.evaluate(()=>window.spoken[0])).includes(checkText));
   await page.locator('#soundBtn').click();assert.equal(await page.locator('#listenLesson').isDisabled(),true);
   await page.evaluate(()=>{speechSynthesis.speak=window.originalSpeak;});
-  assert.deepEqual(errors,[]);console.log('PASS: 43 lessons at phone width, lesson reload/resume/checks, missed-check scaffolding, within-session adaptation, reteaching, supported replays with saved drafts, legacy progress/rewards, notes/input switching, year boundaries, both family voices, read-aloud queue/mute, offline shell/audio and backup.');
+  assert.deepEqual(errors,[]);console.log('PASS: all mapped lessons at phone width, lesson reload/resume/checks, missed-check scaffolding, within-session adaptation, reteaching, supported replays with saved drafts, legacy progress/rewards, notes/input switching, year boundaries, both family voices, read-aloud queue/mute, offline shell/audio and backup.');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
