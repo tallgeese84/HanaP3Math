@@ -1,6 +1,6 @@
 {
   "name": "hana-maths-studio",
-  "version": "24.0.0",
+  "version": "25.0.0",
   "private": true,
   "description": "Singapore P3 and P4 maths practice with Hana's family audio",
   "scripts": {
@@ -11,7 +11,8 @@
     "test:flow": "node tests/jsdom-flow.cjs",
     "test:exams": "node tests/exam-flow.cjs",
     "test:nightly": "node tests/nightly-flow.cjs",
-    "test:partwhole": "node tests/part-whole-browser.cjs"
+    "test:partwhole": "node tests/part-whole-browser.cjs",
+    "test:earned": "node tests/course-earned-browser.cjs"
   },
   "engines": {
     "node": ">=20"

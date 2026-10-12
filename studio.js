@@ -27,7 +27,9 @@ function saveDraft(){
  persist();
 }
 async function reload(){
- learning=L.clean(readJSON(await store.get('hq_learning'),{}));
+ learning=L.captureCourseEarned(readJSON(await store.get('hq_learning'),{}));
+ // Backfill is saved before a cloud round trip or the next answer can prune it.
+ await store.set('hq_learning',JSON.stringify(learning));
  const raw=readJSON(await store.get('hq_session'),null);
  session=raw&&Array.isArray(raw.queue)&&raw.queue.every(id=>C.skills.some(s=>s.id===id))&&Number.isInteger(raw.index)&&raw.index>=0&&raw.index<=raw.queue.length&&[3,4].includes(raw.year)?raw:null;
  if(session&&(!Array.isArray(session.results)||!session.current?.spec))session=null;

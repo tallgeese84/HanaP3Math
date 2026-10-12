@@ -96,13 +96,14 @@ function create({student,catalog,config,storage,key,request,hash,now=()=>Date.no
   return copy(active.plan);
  }
  function plan(){return connectionMatches()&&active&&usable(active.plan,now())?copy(active.plan):null;}
+ function preview(){const e=connectionMatches()?entries[day(now())]:null;return e&&usable(e.plan,now())?copy(e.plan):null;}
  function started(ref){if(!connectionMatches()||!active||!ref||JSON.stringify(identity(active.plan))!==JSON.stringify(ref))return;active.startedAt||=new Date(now()).toISOString();const e=entries[active.plan.sessionDate];if(e?.plan.revision===active.plan.revision)e.startedAt=active.startedAt;persist();notify();}
  function report(){
   const connected=connectionMatches(),e=connected?entries[day(now())]:null,p=connected&&active&&usable(active.plan,now())?active:null;
   const receipt=x=>x?{...identity(x.plan),sourceExportedAt:x.plan.sourceExportedAt,receivedAt:x.receivedAt,adoptedAt:x.adoptedAt,startedAt:x.startedAt}:null;
   return {schema:1,student,status,lastCheckedAt,received:receipt(e),active:receipt(p)};
  }
- return {refresh,adopt,plan,started,report,invalidate,initialize:async()=>{try{await syncConfig();notify();}catch(_){status='Private plan cache unavailable; built-in learning continues.';notify();}}};
+ return {refresh,adopt,plan,preview,started,report,invalidate,initialize:async()=>{try{await syncConfig();notify();}catch(_){status='Private plan cache unavailable; built-in learning continues.';notify();}}};
 }
 return {validate,usable,day,identity,create};
 });

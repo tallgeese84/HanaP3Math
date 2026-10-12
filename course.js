@@ -124,8 +124,16 @@ function status(state,skills,now=Date.now()){
  if(state_==='behind')advice.push(`About ${Math.round(-gapWeeks)} weeks behind plan. Consider ${Math.min(14,s.perWeek+2)} sessions a week, or a later target date.`);
  if(weekSessions<s.perWeek&&now>=start)advice.push(`${weekSessions} of ${s.perWeek} sessions done this week.`);
  const stuck=current?.list.find(x=>x.status==='started'&&(x.attempts||0)>=24);
- if(stuck)advice.push(`${stuck.name} has had ${stuck.attempts} questions without becoming secure. Sitting with Hana for one session, or explaining it at the table, may help.`);
+ if(stuck)advice.push(`${stuck.name}: ${stuck.attempts} practice questions recorded. ${clean.courseEarned[stuck.id]?'This skill was earned earlier; newer answers need review.':'Recent answers show that more review would help.'} Sitting with Hana for one session, or explaining it at the table, may help.`);
  return {settings:s,units,current,progress,expected,progressPct:progress/TOTAL,expectedPct:expected/TOTAL,gapWeeks,state:state_,weekSessions,checkpoints:cps,nextCheckpoint:cps.find(c=>c.due)||null,daysLeft,remainingWeeks:remaining*scale,advice,adjust:adjustments(state),repairs:repairs(state,skills,now)};
+}
+// Achievements are a display record, not an alternative course scheduler.
+// The existing current-readiness status/plan/checkpoints remain authoritative.
+function earnedStatus(state,skills){
+ const s=L.captureCourseEarned(state),known=new Set(skills.map(k=>k.id));let progress=0;
+ const units=UNITS.map(u=>{const earned=u.skills.filter(id=>known.has(id)&&s.courseEarned[id]).length;progress+=u.weeks*earned/u.skills.length;return {...u,earned,done:earned===u.skills.length};});
+ const current=units.find(u=>!u.done)||null;
+ return {courseEarned:s.courseEarned,units,current,progress,progressPct:progress/TOTAL,earnedSkills:units.reduce((n,u)=>n+u.earned,0)};
 }
 // One course session: new learning, word problems, then mixed review.
 function plan(state,skills,now=Date.now()){
@@ -171,6 +179,6 @@ function setSettings(state,patch,now=Date.now()){
  const cur=settings(state),next={start:cur.start,target:cur.target,perWeek:cur.perWeek,...patch,updatedAt:now};
  return L.merge(state,{course:next});
 }
-const api={UNITS,CHECKPOINTS,DEFAULTS,TOTAL,settings,schedule,skillStatus,status,plan,repairs,adjustments,setSettings,iso,date};
+const api={UNITS,CHECKPOINTS,DEFAULTS,TOTAL,settings,schedule,skillStatus,status,earnedStatus,plan,repairs,adjustments,setSettings,iso,date};
 if(node)module.exports=api;else root.HanaCourse=api;
 })(typeof window==='undefined'?globalThis:window);

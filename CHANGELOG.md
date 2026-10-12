@@ -1,3 +1,10 @@
+# h25 — keep earned progress, show current review separately
+
+- Backfill and preserve historical course readiness milestones in the existing learning record. Deduplicate answer identities conservatively; support, repeats and lesson checks do not manufacture credit.
+- Earned percentages and the unit reached retain their credit through later review, reloads, cloud/older snapshot merges and history pruning. Show the actual saved continuation task or current course focus separately, including recent independent answers and a helpful next step.
+- Keep current readiness, question selection, workload, prerequisites, nightly priorities and checkpoint eligibility unchanged. The parent view distinguishes earned progress from current readiness and corrects misleading never-secure advice.
+- Include validated milestone records in private reports and backups; report version, page assets and offline cache are h25.
+
 # h24 — part-whole teaching and steady daily practice
 
 - Keep the 10-question course, approximately 20-minute guidance and five sessions per week. Encourage breaks and saved-session continuation.

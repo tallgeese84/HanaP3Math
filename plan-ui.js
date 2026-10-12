@@ -11,7 +11,7 @@ let paper=null,paperTimer=null,lastTick=0,stroke=null;
 
 /* ---------- home ---------- */
 const card=document.createElement('section');card.className='course-card';card.id='courseCard';card.setAttribute('aria-labelledby','courseTitle');
-card.innerHTML=`<div class="course-top"><span class="eyebrow">Road to Singapore P4</span><span class="course-week" id="courseWeek"></span></div><h3 id="courseTitle">Your learning path</h3><div class="course-bar" aria-hidden="true"><span id="courseFill"></span></div><p class="course-meta" id="courseMeta"></p><div class="home-actions"><button class="btn primary" id="startCourse">Today’s session →</button><button class="btn" id="resumePaper" hidden>Continue checkpoint</button><button class="btn" id="startPaper" hidden></button></div>`;
+card.innerHTML=`<div class="course-top"><span class="eyebrow">Road to Singapore P4</span><span class="course-week" id="courseWeek"></span></div><h3 id="courseTitle">Your learning path</h3><div class="course-bar" aria-hidden="true"><span id="courseFill"></span></div><p class="course-meta" id="courseMeta"></p><div class="course-focus" id="courseFocus" aria-live="polite"></div><div class="home-actions"><button class="btn primary" id="startCourse">Today’s session →</button><button class="btn" id="resumePaper" hidden>Continue checkpoint</button><button class="btn" id="startPaper" hidden></button></div>`;
 const actions=document.querySelector('#scr-home .home-actions');actions.before(card);
 $('startDaily').classList.remove('primary');$('startDaily').textContent='Free practice';
 const note=actions.nextElementSibling;if(note&&note.classList.contains('muted'))note.textContent='Today’s session: about 20 minutes · lessons, word problems and review. Take a break and continue when you’re ready.';
@@ -21,15 +21,28 @@ $('resumePaper').onclick=()=>resumePaper();
 
 function renderHome(){
  if(!window.HanaStudio)return;
- const st=K.status(learning(),C.skills),u=st.current,idx=u?K.UNITS.findIndex(x=>x.id===u.id)+1:K.UNITS.length;
- $('courseTitle').textContent=u?`Unit ${idx} of ${K.UNITS.length} · ${u.title}`:'Every unit explored. Keep reviewing!';
- $('courseFill').style.width=Math.round(st.progressPct*100)+'%';
- const next=u?u.list.find(x=>x.status!=='ready'&&x.status!=='secure'):null;
- $('courseMeta').textContent=`${Math.round(st.progressPct*100)}% of the path${next?` · Next: ${next.name}`:''}`;
+ const state=learning(),st=K.status(state,C.skills),earned=K.earnedStatus(state,C.skills),u=earned.current,idx=u?K.UNITS.findIndex(x=>x.id===u.id)+1:K.UNITS.length;
+ $('courseTitle').textContent=u?`Unit ${idx} of ${K.UNITS.length}${idx>1?' reached':''} · ${u.title}`:'Every unit earned. Keep reviewing!';
+ $('courseFill').style.width=Math.round(earned.progressPct*100)+'%';
+ $('courseMeta').textContent=`${Math.round(earned.progressPct*100)}% progress earned · ${earned.earnedSkills} skills earned`;
+ const saved=HanaStudio.getSession(),unfinished=saved&&saved.index<saved.queue.length;
+ let id=unfinished?(saved.current?.spec?.skill||saved.queue[saved.index]):null;
+ if(!unfinished){let next=K.plan(state,C.skills);const preview=window.HanaNightly?.preview();if(preview)next=HanaNightly.prioritize(next,preview,state,C.skills,K,HanaLearning);id=next.queue[0];}
+ const skill=C.skills.find(s=>s.id===id),e=skill?HanaLearning.evidence(state,id):null;
+ if(pendingPaper){
+  $('courseFocus').innerHTML=`<strong>Continue your checkpoint</strong><span>${esc(pendingPaper.title)}</span>`;
+  $('startCourse').textContent='Continue checkpoint →';
+ }else{
+  const review=!!earned.courseEarned[id],label=unfinished?'Continue':review?'Today’s review':'Today’s learning';
+  const evidence=e?.recent?`${e.success} of your last ${e.recent} answers worked out on your own.`:'Start with a short lesson, then have a go.';
+  const next=skill?.manual?'Draw your model and save it for a grown-up.':e?.reteach?'Let’s revisit the idea together, then try a fresh problem.':e?.due?'Show what you remember, then use a reminder if it helps.':e?.success?'Try the idea in a fresh problem. Hints are here whenever you need them.':'Take one small step at a time. Hints are here to help.';
+  $('courseFocus').innerHTML=skill?`<strong>${label} · ${esc(skill.name)}</strong><span>${esc(skill.manual?'Draw it, then ask a grown-up to check.':evidence)}</span><small>${esc(next)}</small>`:'';
+  $('startCourse').textContent=unfinished?'Continue session →':'Today’s session →';
+ }
  $('courseWeek').textContent=st.weekSessions?'This week '+'★'.repeat(Math.min(st.weekSessions,10)):'';
  const cp=st.nextCheckpoint;$('startPaper').hidden=!cp||!!pendingPaper;
  if(cp)$('startPaper').textContent=`${cp.title.split(' · ')[0]} →`;
- $('resumePaper').hidden=!pendingPaper;
+ $('resumePaper').hidden=true; // the primary button resumes the same checkpoint
  $('startCourse').disabled=!HanaStudio.ready();
 }
 
@@ -118,14 +131,14 @@ $('progressBody').before(panel);
 $('openProgress').addEventListener('click',renderPanel);
 const stateLabel={'not-started':'Starts soon','on-track':'On track','slightly-behind':'Slightly behind','behind':'Behind plan'};
 function renderPanel(){
- const st=K.status(learning(),C.skills),s=st.settings,papers=learning().papers||[];
- const unitRows=st.units.map((u,i)=>`<tr class="${u.done?'done':u===st.current?'now':''}"><td>${i+1}. ${esc(u.title)}<small>P${u.year}</small></td><td>${shortDate(u.from)} – ${shortDate(u.due)}</td><td>${u.ready}/${u.skills.length}</td></tr>`).join('');
+ const st=K.status(learning(),C.skills),earned=K.earnedStatus(learning(),C.skills),s=st.settings,papers=learning().papers||[];
+ const unitRows=st.units.map((u,i)=>`<tr class="${u.done?'done':u===st.current?'now':''}"><td>${i+1}. ${esc(u.title)}<small>P${u.year}</small></td><td>${shortDate(u.from)} – ${shortDate(u.due)}</td><td>${earned.units[i].earned}/${u.skills.length}</td><td>${u.ready}/${u.skills.length}</td></tr>`).join('');
  const cpRows=st.checkpoints.map(cp=>{const p=cp.last;return `<li><strong>${esc(cp.title)}</strong> <span class="muted">· planned ${shortDate(cp.plannedFor)}</span><br>${p?`${p.score}/${p.max} (${Math.round(p.pct*100)}%, ${esc(p.band)}) on ${fmtDate(p.at)}`:cp.due?'<em>Ready to take now</em>':'Not yet'}${p?`<details><summary>Topics &amp; recommendations</summary><ul>${p.recs.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><table class="mini-table">${p.topics.map(t=>`<tr><td>${esc(t.topic)}</td><td>${t.earned}/${t.max}</td></tr>`).join('')}</table></details>`:''}</li>`;}).join('');
  const practice=papers.filter(p=>!K.CHECKPOINTS.some(c=>c.id===p.cp));
  panel.innerHTML=`<h3>June plan · Road to Singapore P4</h3>
- <div class="plan-status" data-state="${st.state}"><strong>${stateLabel[st.state]}</strong><span>${Math.round(st.progressPct*100)}% done · plan expects ${Math.round(st.expectedPct*100)}% today · target ${fmtDate(K.date(s.target))} (${st.daysLeft} days)</span></div>
+ <div class="plan-status" data-state="${st.state}"><strong>${stateLabel[st.state]}</strong><span>${Math.round(earned.progressPct*100)}% progress earned · ${Math.round(st.progressPct*100)}% currently ready · plan expects ${Math.round(st.expectedPct*100)}% today · target ${fmtDate(K.date(s.target))} (${st.daysLeft} days)</span></div>
  <ul class="plan-advice">${[...st.advice,...st.adjust.notes].map(a=>`<li>${esc(a)}</li>`).join('')||'<li>No changes needed.</li>'}${st.repairs.length?`<li>Repairing after the last checkpoint: ${esc(st.repairs.map(r=>C.skills.find(k=>k.id===r.skill)?.name).join(', '))}.</li>`:''}</ul>
- <details open><summary>Units and dates</summary><table class="mini-table plan-units"><thead><tr><th>Unit</th><th>Planned</th><th>Skills ready</th></tr></thead><tbody>${unitRows}</tbody></table><p class="map-note">A skill is ready after three recent independent answers, including two at level 2 or 3. Final ${s.consolidationWeeks} weeks before the target are kept for review and Checkpoint 5.</p></details>
+ <details open><summary>Units and dates</summary><table class="mini-table plan-units"><thead><tr><th>Unit</th><th>Planned</th><th>Earned</th><th>Ready now</th></tr></thead><tbody>${unitRows}</tbody></table><p class="map-note">Earned progress records skills that previously met the readiness rule; it stays earned when later work needs review. Current readiness uses the latest eight answers: three independent, including two at level 2 or 3. Review, lesson support and checkpoints still follow current readiness. Earned progress is not a mastery certificate. Final ${s.consolidationWeeks} weeks before the target are kept for review and Checkpoint 5.</p></details>
  <details open><summary>Checkpoints</summary><ol class="plan-cps">${cpRows}</ol>${practice.length?`<p class="map-note">Practice checkpoints: ${practice.map(p=>`${p.score}/${p.max} on ${shortDate(p.at)}`).join(' · ')}</p>`:''}<div class="report-actions"><button class="btn" id="practicePaper">Start a practice checkpoint (everything so far)</button></div></details>
  <details><summary>Plan settings</summary><div class="plan-settings"><label>Start date <input type="date" id="planStart" value="${s.start}"></label><label>Target date <input type="date" id="planTarget" value="${s.target}"></label><label>Sessions per week <input type="number" id="planWeek" min="2" max="14" value="${s.perWeek}"></label><button class="btn" id="planSave">Save plan</button><p id="planSaved" role="status" class="map-note"></p></div><p class="map-note">Singapore Term 3 starts in late June. A target in early June leaves time to settle in.</p></details>`;
  $('practicePaper').onclick=()=>{const units=st.units.filter(u=>u.started).map(u=>u.id);if(!units.length){alert('Start the first unit before a practice checkpoint.');return;}$('progressDialog').close();openPaper(P.build('practice',C.skills,{units,title:'Practice checkpoint',size:'short'}));};

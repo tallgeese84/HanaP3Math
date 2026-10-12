@@ -2,6 +2,10 @@
 (function(root){
 'use strict';
 const DAY=86400000;
+const manualSkills=new Set(['p3-drawlines','p4-construct','p4-drawsymmetry']);
+const skillId=id=>typeof id==='string'&&/^p[34]-[a-z]+$/.test(id)&&id.length<=40;
+const validEvent=e=>e&&typeof e.id==='string'&&typeof e.skill==='string'&&Number.isFinite(e.at)&&[1,2,3].includes(e.tier);
+const time=at=>Number.isFinite(at)&&at>=0&&at<=8640000000000000;
 function clean(value){
  const events=Array.isArray(value?.events)?value.events:[],lessons={},exposures={};
  for(const [id,v] of Object.entries(value?.lessons||{}))if(/^p[34]-[a-z]+$/.test(id)&&v&&Number.isFinite(v.at))lessons[id]={at:v.at,passed:!!v.passed,tries:Math.max(0,Math.min(99,Number(v.tries)||0))};
@@ -10,20 +14,66 @@ function clean(value){
  // Checkpoint papers and the course plan travel with learning evidence (h17).
  const papers=(Array.isArray(value?.papers)?value.papers:[]).filter(p=>p&&typeof p.id==='string'&&Number.isFinite(p.at)&&Array.isArray(p.items)).sort((a,b)=>a.at-b.at).slice(-200);
  const course=value?.course&&typeof value.course==='object'&&Number.isFinite(value.course.updatedAt)?value.course:null;
- return {version:3,events:events.filter(e=>e&&typeof e.id==='string'&&typeof e.skill==='string'&&Number.isFinite(e.at)&&[1,2,3].includes(e.tier)).slice(-5000),lessons,checks,exposures,papers,course};
+ const valid=events.filter(validEvent);
+ return {version:3,events:valid.slice(-5000),lessons,checks,exposures,papers,course,courseEarned:cleanEarned(value?.courseEarned)};
 }
 function merge(a,b){
+ const incoming=[...(Array.isArray(a?.events)?a.events:[]),...(Array.isArray(b?.events)?b.events:[])].filter(validEvent);
  a=clean(a);b=clean(b);const seen=new Map(),lessons={...a.lessons},exposures={...a.exposures};
- for(const e of [...a.events,...b.events])seen.set(e.id,seen.has(e.id)?mergeEvent(seen.get(e.id),e):e);
+ // Merge raw legacy evidence conservatively before deriving any new credit.
+ for(const e of incoming)seen.set(e.id,seen.has(e.id)?mergeEvent(seen.get(e.id),e):e);
  for(const [id,v] of Object.entries(b.lessons))if(!lessons[id]||v.at>lessons[id].at)lessons[id]=v;
  for(const [id,at] of Object.entries(b.exposures))exposures[id]=Math.max(exposures[id]||0,at);
  const checks=new Map();for(const c of [...a.checks,...b.checks])if(!checks.has(c.id))checks.set(c.id,c);
  const papers=new Map();for(const p of [...a.papers,...b.papers])if(!papers.has(p.id)||(p.updatedAt||p.at)>(papers.get(p.id).updatedAt||papers.get(p.id).at))papers.set(p.id,p);
  const course=!a.course?b.course:!b.course?a.course:(b.course.updatedAt>a.course.updatedAt?b.course:a.course);
- return clean({events:[...seen.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),lessons,exposures,checks:[...checks.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),papers:[...papers.values()],course});
+ const courseEarned={...a.courseEarned};for(const [id,v]of Object.entries(b.courseEarned))if(!courseEarned[id]||earnedOrder(v,courseEarned[id])<0)courseEarned[id]=v;
+ return captureCourseEarned({events:[...seen.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),lessons,exposures,checks:[...checks.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),papers:[...papers.values()],course,courseEarned});
 }
 // Never trust an independent flag when recorded support contradicts it.
 const independent=e=>!!e.independent&&!e.manual&&!e.hints&&!e.tries&&!e.revealed&&!e.lessonHelp&&!e.repeated&&e.confidence!=='guess'&&e.correct!==false;
+const earnedOrder=(a,b)=>a.at-b.at||JSON.stringify(a).localeCompare(JSON.stringify(b));
+function uniqueEvents(events){const out=new Map();for(const e of events)out.set(e.id,out.has(e.id)?mergeEvent(out.get(e.id),e):e);return [...out.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id));}
+// Proofs retain only the original answer identities/levels, never questions,
+// working or credentials. Ordinary later review does not undo an achievement.
+function cleanEarned(value){
+ const out={};
+ for(const [id,v]of Object.entries(value&&typeof value==='object'&&!Array.isArray(value)?value:{}).sort().slice(0,80)){
+  if(!skillId(id)||!v||!time(v.at)||!Array.isArray(v.proof))continue;
+  const manual=v.rule==='manual-v1',auto=v.rule==='ready-v1';
+  if(!auto&&!manual||manual!==manualSkills.has(id)||v.proof.length!==(manual?1:3))continue;
+  const proof=v.proof.map(p=>p&&typeof p.id==='string'&&p.id.length>0&&p.id.length<=200&&time(p.at)&&p.at<=v.at&&[1,2,3].includes(p.tier)&&(manual?p.manual===true:independent(p))?{id:p.id,at:p.at,tier:p.tier,...(manual?{manual:true}:{independent:true})}:null);
+  if(proof.some(p=>!p)||new Set(proof.map(p=>p.id)).size!==proof.length)continue;
+  proof.sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id));
+  if(auto&&(proof.filter(p=>p.tier>=2).length<2||v.at!==Math.max(...proof.map(p=>p.at))))continue;
+  if(manual&&(!time(v.lessonAt)||v.at!==Math.max(v.lessonAt,proof[0].at)))continue;
+  // This is a historical certificate, not a new current-readiness assertion.
+  // Later reviews/corrections cannot erase a milestone already recorded.
+  out[id]={rule:v.rule,at:v.at,proof,...(manual?{lessonAt:v.lessonAt}:{})};
+ }
+ return out;
+}
+function captureCourseEarned(value){
+ const s=clean(value),events=uniqueEvents((Array.isArray(value?.events)?value.events:[]).filter(validEvent)),windows=new Map(),courseEarned={...s.courseEarned};
+ for(const e of events){
+  if(!skillId(e.skill)||courseEarned[e.skill]?.at<=e.at)continue;
+  if(manualSkills.has(e.skill)){
+   if(!e.manual)continue;
+   const lessonTimes=[s.lessons[e.skill]?.at,...s.checks.filter(c=>c.skill===e.skill).map(c=>c.at)].filter(time);
+   if(!lessonTimes.length)continue;const lessonAt=Math.min(...lessonTimes);
+   const milestone={rule:'manual-v1',at:Math.max(e.at,lessonAt),lessonAt,proof:[{id:e.id,at:e.at,tier:e.tier,manual:true}]};
+   if(!courseEarned[e.skill]||earnedOrder(milestone,courseEarned[e.skill])<0)courseEarned[e.skill]=milestone;continue;
+  }
+  if(e.manual)continue;
+  const window=[...(windows.get(e.skill)||[]),e].slice(-8);windows.set(e.skill,window);
+  const winners=window.filter(independent),strong=winners.filter(x=>x.tier>=2);
+  if(winners.length<3||strong.length<2)continue;
+  const chosen=[...strong.slice(0,2),winners.find(x=>!strong.slice(0,2).includes(x))].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id));
+  courseEarned[e.skill]={rule:'ready-v1',at:e.at,proof:chosen.map(x=>({id:x.id,at:x.at,tier:x.tier,independent:true}))};
+ }
+ // Capture before the regular 5,000-event retention cap is applied.
+ return clean({...s,courseEarned});
+}
 function mergeEvent(a,b){
  if(JSON.stringify(a)===JSON.stringify(b))return a;
  const newer=(a.updatedAt||a.at)>(b.updatedAt||b.at)?a:(a.updatedAt||a.at)<(b.updatedAt||b.at)?b:JSON.stringify(a)>JSON.stringify(b)?a:b;
@@ -80,5 +130,5 @@ function plan(state,skills,year,kind='daily',focus=null,now=Date.now()){
  const review=ranked.filter(x=>x.s.id!==focusSkill.s.id&&x.e.total>0&&!x.e.reteach).slice(0,2).map(x=>x.s.id);
  return [...Array(6-review.length).fill(focusSkill.s.id),...review];
 }
-const api={clean,merge,evidence,plan,independent,exposure,recommend};if(typeof module==='object'&&module.exports)module.exports=api;else root.HanaLearning=api;
+const api={clean,merge,evidence,plan,independent,exposure,recommend,captureCourseEarned};if(typeof module==='object'&&module.exports)module.exports=api;else root.HanaLearning=api;
 })(typeof window==='undefined'?globalThis:window);
