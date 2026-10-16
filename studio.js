@@ -110,8 +110,20 @@ function renderCurrent(){
  answerUI();
  if(c.done){const b=$('blank');if(b)b.innerHTML=answerText();}
  renderThinking();
+ renderWordSupport();
  lastTick=lastActivity=Date.now();
  if(!c.done&&ttsQuestions())say(s.phrase);
+}
+// The model uses equal-width labelled parts: geometry never reveals the answer.
+function renderWordSupport(){
+ $('wordSupport')?.remove();const c=current(),W=window.HanaWordSupport;
+ if(!c||!W||c.done)return;
+ if(!c.wordSupport)c.wordSupport=W.choose(learning,c.spec,{kind:session.kind,phase:c.phase});
+ const ws=c.wordSupport;if(!ws?.used)return;
+ const box=document.createElement('section');box.id='wordSupport';box.className='helpbox';box.setAttribute('aria-label','Work out the story');
+ const m=ws.model,step=m.steps[ws.stage];
+ box.innerHTML='<h3>Work out the story</h3><p>Whole: '+esc(m.total)+'</p><p>'+m.parts.map(v=>'[ '+esc(v)+' ]').join(' + ')+(m.findWhole?'':' + [ ? ]')+'</p>'+(step?'<p>'+esc(step.prompt)+'</p><div class="button-row">'+step.choices.map((v,i)=>'<button type="button" class="btn" data-part-choice="'+i+'">'+esc(v)+'</button>').join('')+'</div>':'<p>Now calculate it. Check that your parts make the whole.</p>')+'<p role="status">'+esc(ws.feedback||'These prompts count as support, not an independent answer.')+'</p>';
+ $('qvis').after(box);box.querySelectorAll('[data-part-choice]').forEach(b=>b.onclick=()=>{tick();W.answer(ws,+b.dataset.partChoice);persist();renderWordSupport();});
 }
 function openLesson(reason='replay'){
  const c=current();if(!c||!T.get(c.spec.skill))return;
@@ -246,10 +258,11 @@ function answer(correct,btn,response,override=null){
 }
 function settle(independent,revealed,manual=false){
  const c=current();if(!c||c.done)return;
- tick();c.done=true;c.revealed=revealed;padLocked=true;
+ tick();independent=!!independent&&!c.wordSupport?.used;c.done=true;c.revealed=revealed;padLocked=true;
  c.feedback=manual?'Saved for a grown-up’s review.':revealed?'Let’s learn from this. '+c.spec.fact:independent?'You worked it out! '+c.spec.fact:c.confidence==='guess'?'You found the answer. Let’s check why it works. '+c.spec.fact:c.repeated?'A familiar question! Let’s try another one next. '+c.spec.fact:'You got there with help. '+c.spec.fact;
  const event={id:c.id,session:session.id,skill:c.spec.skill,year:c.spec.year,tier:c.spec.tier,at:Date.now(),independent:!!independent,correct:!revealed&&!manual,manual,lessonHelp:!!c.lessonHelp,hints:c.hints,tries:c.tries,revealed,elapsedMs:c.elapsed+Math.max(0,Date.now()-c.started),signature:c.spec.signature,question:c.spec.qtext,answer:c.spec.ans,notes:c.notes,strokes:c.strokes,attempts:c.attempts||[],confidence:c.confidence||'unreported',obstacle:c.obstacle||null,phase:c.phase||'practice',reviewGapMs:Math.max(0,Math.min(c.reviewGapMs||0,c.started-L.exposure(learning,c.spec.skill))),form:c.spec.form||K.form(c.spec),family:c.spec.family,bankRevision:c.spec.bankRevision,sourceId:c.spec.sourceId,sourcePaper:c.spec.sourcePaper,sourceQuestion:c.spec.sourceQuestion,sourcePage:c.spec.sourcePage,repeated:!!c.repeated,course:session.kind==='course',activeMs:c.activeMs??null,answerDisplay:answerText(),money:!!c.spec.money,updatedAt:Date.now()};
  if(c.nightlyPlan)event.nightlyPlan={...c.nightlyPlan};
+ const wordSupport=window.HanaWordSupport?.evidence(c.wordSupport);if(wordSupport)event.wordSupport=wordSupport;
  learning=L.merge(learning,{events:[event]});session.results.push(event);
  const nextEvidence=L.evidence(learning,c.spec.skill);
  // Offer two smaller foundation steps inside a daily session. Explicit focus

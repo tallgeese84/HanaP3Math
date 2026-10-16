@@ -91,7 +91,7 @@ test('malformed milestones are rejected and exported proof records contain no pr
  assert.deepEqual(L.clean({courseEarned:{'<script>':good,'p3-drawlines':good}}).courseEarned,{});
  const s={courseEarned:{'p3-place':{...good,secret:'never-export',proof:good.proof.map(p=>({...p,secret:'never-export',question:'private extra'}))}}};
  const b=R.build(s,C.skills,{now:NOW,timeZone:'America/Chicago'});
- assert.equal(b.appVersion,'h25');assert.ok(b.learning.courseEarned['p3-place']);assert.ok(!JSON.stringify(b).includes('never-export'));assert.ok(!JSON.stringify(b).includes('private extra'));
+ assert.equal(b.appVersion,'h26');assert.ok(b.learning.courseEarned['p3-place']);assert.ok(!JSON.stringify(b).includes('never-export'));assert.ok(!JSON.stringify(b).includes('private extra'));
  assert.equal(b.learning.course.earnedCurrent,'u1');assert.equal(b.learning.course.earnedProgressPct,.75/31);
 });
 

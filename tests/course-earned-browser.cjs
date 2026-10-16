@@ -54,7 +54,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),root=path.
   // Older cloud snapshots cannot erase milestones, and the private report separates metrics.
   await page.evaluate(async()=>HanaStudio.mergeLearning({events:[]}));
   const report=await page.evaluate(()=>HanaReview.build(HanaStudio.getLearning(),HanaCurriculum.skills,{timeZone:'America/Chicago'}));
-  assert.equal(report.appVersion,'h25');assert.equal(report.learning.course.earnedCurrent,'u2');assert.equal(report.learning.course.current,'u1');
+  assert.equal(report.appVersion,'h26');assert.equal(report.learning.course.earnedCurrent,'u2');assert.equal(report.learning.course.current,'u1');
   assert.equal(report.learning.course.earnedProgressPct,original.earned);assert.ok(report.learning.courseEarned['p3-place']);
   // Checkpoint continuation takes precedence over the unfinished practice session.
   await page.evaluate(()=>HanaPlan.openPaper(HanaPapers.build('cp1',HanaCurriculum.skills)));await page.locator('#paperLater').click();

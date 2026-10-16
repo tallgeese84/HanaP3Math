@@ -122,7 +122,7 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
   if(spec.essentialVisual)assert.ok($('qvis').querySelector('svg,table'),'required diagram shown');
   if(spec.kind==='key'){
    assert.equal($('typedAnswer').disabled,false);assert.equal($('answerForm').hidden,false);
-   $('typedAnswer').value=String((spec.money?spec.ans/100:spec.ans)+1);
+   $('typedAnswer').value=Number(spec.ans)===0?'1':'0'; // Valid wrong input for integer, decimal and money questions.
    $('answerForm').dispatchEvent(new w.Event('submit',{cancelable:true}));
    assert.equal(session.current.done,false);assert.equal(session.current.tries,1);
    $('typedAnswer').value=spec.money?(spec.ans/100).toFixed(2):String(spec.ans);

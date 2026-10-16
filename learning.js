@@ -31,7 +31,7 @@ function merge(a,b){
  return captureCourseEarned({events:[...seen.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),lessons,exposures,checks:[...checks.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id)),papers:[...papers.values()],course,courseEarned});
 }
 // Never trust an independent flag when recorded support contradicts it.
-const independent=e=>!!e.independent&&!e.manual&&!e.hints&&!e.tries&&!e.revealed&&!e.lessonHelp&&!e.repeated&&e.confidence!=='guess'&&e.correct!==false;
+const independent=e=>!e.wordSupport?.used&&!!e.independent&&!e.manual&&!e.hints&&!e.tries&&!e.revealed&&!e.lessonHelp&&!e.repeated&&e.confidence!=='guess'&&e.correct!==false;
 const earnedOrder=(a,b)=>a.at-b.at||JSON.stringify(a).localeCompare(JSON.stringify(b));
 function uniqueEvents(events){const out=new Map();for(const e of events)out.set(e.id,out.has(e.id)?mergeEvent(out.get(e.id),e):e);return [...out.values()].sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id));}
 // Proofs retain only the original answer identities/levels, never questions,
@@ -81,6 +81,7 @@ function mergeEvent(a,b){
  for(const k of ['hints','tries'])if(k in a||k in b)out[k]=Math.max(a[k]||0,b[k]||0);
  for(const k of ['revealed','lessonHelp','repeated','manual'])if(k in a||k in b)out[k]=!!(a[k]||b[k]);
  if(a.confidence==='guess'||b.confidence==='guess')out.confidence='guess';
+ if(a.wordSupport?.used||b.wordSupport?.used){const ws=newer.wordSupport?.used?newer.wordSupport:a.wordSupport?.used?a.wordSupport:b.wordSupport;out.wordSupport={...ws,used:true};out.independent=false;}
  if(a.attempts||b.attempts){const attempts=new Map();for(const v of [...(a.attempts||[]),...(b.attempts||[])])if(v&&typeof v.id==='string')attempts.set(v.id,v);out.attempts=[...attempts.values()].sort((x,y)=>x.at-y.at).slice(-30);}
  return out;
 }

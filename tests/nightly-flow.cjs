@@ -4,7 +4,7 @@ const {JSDOM,VirtualConsole}=require('jsdom'),assert=require('node:assert/strict
 const {webcrypto}=require('node:crypto');
 const Core=require('../nightly-priority-core.js');
 const now=Date.now(),today=Core.day(now),previous=new Date(Date.parse(today+'T12:00:00Z')-86400000).toISOString().slice(0,10);
-let remote={schema:1,id:'hana-nightly-'+today,revision:1,student:'Hana',timeZone:'America/Chicago',reviewedDate:previous,sessionDate:today,generatedAt:new Date(now).toISOString(),sourceExportedAt:new Date(now-60000).toISOString(),subjects:{maths:{focus:'Explore number patterns.',skills:['p3-patterns']}}};
+let remote={schema:1,id:'hana-nightly-'+today,revision:1,student:'Hana',timeZone:'America/Chicago',reviewedDate:previous,sessionDate:today,generatedAt:new Date(now).toISOString(),sourceExportedAt:new Date(now-60000).toISOString(),subjects:{maths:{focus:'Explore place value.',skills:['p3-place']}}};
 const requests=[];
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 let BASE=process.env.APP_URL;
@@ -57,12 +57,13 @@ async function until(fn,ms=8000,label='condition'){const t=Date.now();while(Date
  await until(()=>w.HanaNightly.report().received,8000,'plan receipt after saving');
  assert.equal(requests.filter(r=>r.backup).length,1,'one upload with the existing review format');
  click($('closeProgress'));
+ // Use an eligible foundation priority: patterns require secure place value.
  click($('startCourse'));
  const session=w.HanaStudio.getSession();
- assert.equal(session.queue[0],'p3-patterns');assert.equal(session.queue.length,10);
- assert.equal(session.current.spec.skill,'p3-patterns');assert.equal(session.phase,'lesson','untaught skill opens teaching');
+ assert.equal(session.queue[0],'p3-place');assert.equal(session.queue.length,10);
+ assert.equal(session.current.spec.skill,'p3-place');assert.equal(session.phase,'lesson','untaught skill opens teaching');
  assert.equal(session.nightlyPlan.revision,1);assert.ok(w.HanaNightly.report().active.startedAt);
- const saved=JSON.stringify(session);remote={...remote,revision:2,subjects:{maths:{focus:'Explore place value.',skills:['p3-place']}}};
+ const saved=JSON.stringify(session);remote={...remote,revision:2,subjects:{maths:{focus:'Explore number patterns.',skills:['p3-patterns']}}};
  await w.HanaNightly.refresh(true);
  assert.equal(JSON.stringify(w.HanaStudio.getSession()),saved,'refresh cannot replace active work');
  w.HanaStudio.pause();click($('startCourse'));
