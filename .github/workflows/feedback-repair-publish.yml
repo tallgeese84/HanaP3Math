@@ -27,7 +27,7 @@ jobs:
           python3 - <<'PY'
           import base64,hashlib,json,lzma,os,pathlib,re,subprocess,urllib.request
           repo=os.environ['GITHUB_REPOSITORY'].split('/')[-1]
-          assert repo in ['Mochi_MathP4-6','HanaP3Math','PokemonNumbers']
+          assert repo=='HanaP3Math'
           ref=os.environ['BUNDLE_REF']
           assert re.fullmatch(r'[a-f0-9]{40}',ref)
           encoded=''.join(urllib.request.urlopen(f'https://raw.githubusercontent.com/tallgeese84/PokemonNumbers/{ref}/.feedback-repair/part{i}.b64',timeout=30).read().decode('ascii') for i in (1,2,3))
@@ -46,8 +46,14 @@ jobs:
           subprocess.run(['git','apply','--unidiff-zero',str(patch)],check=True)
           for f in payload['files']:
               assert hashlib.sha256(pathlib.Path(f['path']).read_bytes()).hexdigest()==f['after'],f['path']
+          p=pathlib.Path('tests/jsdom-flow.cjs');s=p.read_text()
+          old="$('typedAnswer').value=spec.money?(spec.ans/100+1).toFixed(2):String(spec.ans+1);"
+          new="$('typedAnswer').value=Number(spec.ans)===0?'1':'0'; // Valid wrong input for integer, decimal and money questions."
+          assert s.count(old)==1
+          p.write_text(s.replace(old,new))
+          assert hashlib.sha256(p.read_bytes()).hexdigest()=='73d73c7d50fa6409411a719817db5a10390b7dd73e4f6ea85706cbb9568774d3'
           pathlib.Path('/tmp/feedback-paths').write_text('\n'.join(paths)+'\n')
-          print('Verified exact before/after hashes for',len(paths),'files in',repo)
+          print('Verified exact before/after hashes for',len(paths),'files and deterministic decimal test input')
           PY
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
