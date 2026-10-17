@@ -1,7 +1,7 @@
 // Atomic app-shell cache. Family audio is core; artwork is cached on demand.
-const CACHE = 'pokequest-hana-h26';
+const CACHE = 'pokequest-hana-h27';
 const PREFIX = 'pokequest-hana-';
-const CORE = ['./grownup-gate.js?v=h26','./nightly-priority-core.js?v=h26','./nightly-plan.js?v=h26','./','./index.html','./manifest.json','./hana-voice.json','./hana-avatar.png','./digit-net.json','./icon-192.png','./icon-512.png','./studio.css?v=h26','./curriculum.js?v=h26','./learning.js?v=h26','./lessons.js?v=h26','./word-support.js?v=h26', './studio.js?v=h26','./coach.js?v=h26','./learning-review.js?v=h26','./progress.js?v=h26','./drive-mirror.js?v=h26','./problems.js?v=h26','./exam-style.js?v=h26','./course.js?v=h26','./papers.js?v=h26','./plan-ui.js?v=h26','./exam-bank.js?v=h26','./exam-library.js?v=h26','./art/1.png','./art/4.png','./art/7.png','./art/25.png','./art/133.png'];
+const CORE = ['./grownup-gate.js?v=h27','./nightly-priority-core.js?v=h27','./nightly-plan.js?v=h27','./','./index.html','./manifest.json','./hana-voice.json','./hana-avatar.png','./digit-net.json','./icon-192.png','./icon-512.png','./studio.css?v=h27','./curriculum.js?v=h27','./learning.js?v=h27','./lessons.js?v=h27','./word-support.js?v=h27', './studio.js?v=h27','./coach.js?v=h27','./learning-review.js?v=h27','./progress.js?v=h27','./drive-mirror.js?v=h27','./problems.js?v=h27','./exam-style.js?v=h27','./course.js?v=h27','./papers.js?v=h27','./plan-ui.js?v=h27','./exam-bank.js?v=h27','./exam-library.js?v=h27','./art/1.png','./art/4.png','./art/7.png','./art/25.png','./art/133.png'];
 self.addEventListener('install',event=>{
  event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(CORE);await self.skipWaiting();})());
 });
